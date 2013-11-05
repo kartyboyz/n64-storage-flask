@@ -5,10 +5,6 @@ from flask.ext.restful import Api, Resource, marshal, fields, abort
 
 from .models import Session, Race, db
 
-api = Api()
-
-def init_api(app):
-    api.init_app(app)
 
 class SessionAPI(Resource):
 
@@ -18,6 +14,7 @@ class SessionAPI(Resource):
         'video_url': fields.String,
         'video_split': fields.Boolean,
     }
+    allowed_updates = ['video_url']
 
     def __get_session_or_abort(self, session_id):
         session = Session.query.filter(Session.id == session_id).first()
@@ -35,10 +32,9 @@ class SessionAPI(Resource):
         data = request.get_json()
 
         session = self.__get_session_or_abort(session_id)
-        allowed_updates = [u'video_url']
 
         for key, value in data.items():
-            if key in allowed_updates:
+            if key in SessionAPI.allowed_updates:
                 session.__setattr__(key, value)
 
         db.session.add(session)
@@ -86,6 +82,7 @@ class RaceAPI(Resource):
         'race_number': fields.Integer,
         'video_url': fields.String
     }
+    allowed_updates = ['video_url', 'start_time', 'duration']
 
     def __get_race_or_abort(self, race_id):
         race = Race.query.filter(Race.id == race_id).first()
@@ -103,10 +100,9 @@ class RaceAPI(Resource):
         data = request.get_json()
 
         race = self.__get_race_or_abort(race_id)
-        allowed_updates = [u'video_url']
 
         for key, value in data.items():
-            if key in allowed_updates:
+            if key in RaceAPI.allowed_updates:
                 race.__setattr__(key, value)
 
         db.session.add(race)
@@ -123,6 +119,9 @@ class RaceAPI(Resource):
 
 
 class RaceListAPI(Resource):
+
+    required_fields = ['start_time', 'duration']
+
     def get(self, session_id):
         session = Session.query.filter(Session.id == session_id).first()
         if session is None:
@@ -145,10 +144,18 @@ class RaceListAPI(Resource):
         if not isinstance(data, dict):
             data = {}
 
-        video_url = data.get('video_url', '')
+        for item in RaceListAPI.required_fields:
+            if not item in data:
+                abort(400, message="Incomplete Request")
+
         race_number = Race.query.filter(Race.session_id == session_id).count() + 1
 
-        race = Race(session, video_url, race_number)
+        race = Race(session)
+        
+        for item in RaceListAPI.required_fields:
+            race.__setattr__(item, data[item])
+
+        race.race_number = race_number
 
         db.session.add(race)
         db.session.commit()
@@ -156,7 +163,9 @@ class RaceListAPI(Resource):
         return {'message': "Success", 'id':race.id}
 
 
-def configure_resources():
+
+
+def configure_resources(api):
     api.add_resource(SessionListAPI, '/sessions')
     api.add_resource(SessionAPI, '/sessions/<int:session_id>')
     api.add_resource(RaceListAPI, '/sessions/<int:session_id>/races')

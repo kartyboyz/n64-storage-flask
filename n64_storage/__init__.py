@@ -3,6 +3,7 @@ import os
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.migrate import Migrate
+from flask.ext.restful import Api
 
 app = Flask(__name__)
 
@@ -11,9 +12,14 @@ app.config.from_object(env)
 
 
 from . import models                            
-from . import api
+from . import object_api
 
-api.init_api(app)
-api.configure_resources()
+api = Api()
+
+def init_api():
+    api.init_app(app)
+
+init_api()
+object_api.configure_resources(api)
 models.init_db(app)
 
