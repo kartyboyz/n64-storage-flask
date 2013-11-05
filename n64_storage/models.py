@@ -32,13 +32,20 @@ class Race(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.Integer, db.ForeignKey('session.id'))
     session = db.relationship('Session', backref=db.backref('races'))
+
     video_url = db.Column(db.VARCHAR(length=100))
     race_number = db.Column(db.Integer)
 
-    def __init__(self, session, video_url, race_number):
+    start_time = db.Column(db.Integer)
+    duration = db.Column(db.Integer)
+    video_split = db.Column(db.Boolean)
+
+    def __init__(self, session, start_time=0, duration=0):
         self.session = session
-        self.video_url = video_url
-        self.race_number = race_number
+        self.start_time = start_time
+        self.duration = duration
+        self.video_url = ''
+        self.race_number = 0
 
     def __repr__(self):
         return "Race(%r, %r, %r)" % (self.session, self.video_url, self.race_number)
