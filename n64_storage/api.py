@@ -116,7 +116,7 @@ class RaceAPI(Resource):
 
 
     def delete(self, race_id):
-        race = self.__get_session_or_abort(race_id)
+        race = self.__get_race_or_abort(race_id)
         db.session.delete(race)
         db.session.commit()
         return {'message': "Success"}
@@ -142,6 +142,9 @@ class RaceListAPI(Resource):
             abort(404, message="Session {} doesn't exist".format(session_id))
 
         data = request.get_json()
+        if not isinstance(data, dict):
+            data = {}
+
         video_url = data.get('video_url', '')
         race_number = Race.query.filter(Race.session_id == session_id).count() + 1
 
