@@ -11,6 +11,7 @@ import pdb
 
 class StorageTestCase(unittest.TestCase):
 
+
     def setUp(self):
         app.config['TESTING'] = True
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
@@ -75,8 +76,10 @@ class StorageTestCase(unittest.TestCase):
 
 
     def test_session_put(self):
-        self.app.put('/sessions/1', data=json.dumps({'video_url':'my_url'}),
+        resp = self.app.put('/sessions/1',
+                data=json.dumps({'video_url':'my_url'}),
                 content_type='application/json')
+        assert resp.status_code == 200
         resp = self.app.get('/sessions/1')
         assert 'my_url' in resp.data
 
@@ -100,14 +103,42 @@ class StorageTestCase(unittest.TestCase):
 
     
     def test_race_list_post(self):
-        pass
+        resp = self.app.post('/sessions/1/races')
+        assert resp.status_code != 200
+        resp = self.app.post('/sessions/1/races',
+                data=json.dumps(str(dict())),
+                content_type='application/json')                  
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert 'id' in data
 
 
     def test_race_get(self):
-        pass
+        resp = self.app.get('/races/1')
+        assert resp.status_code == 200
+        assert resp.content_type == 'application/json'
+        data = json.loads(resp.data)
+        assert 'video_url' in data
+        assert 'id' in data
+        assert 'race_number' in data
+        assert 'session_id' in data
+        sess = self.app.get('/sessions/%d'%data['session_id'])
+        assert sess.status_code == 200
+
 
     def test_race_put(self):
-        pass
+        resp = self.app.put('/races/1', data=json.dumps({'video_url':'new_url'}),
+                content_type='application/json')
+        assert resp.status_code == 200
+        resp = self.app.get('/races/1')
+        assert 'new_url' in resp.data
+
 
     def test_race_delete(self):
-        pass
+        r = self.app.get('/races/2')
+        assert r.status_code == 200
+        r = self.app.delete('/races/2')
+        assert r.status_code == 200
+        r = self.app.get('/races/2')
+        assert r.status_code == 404
+
