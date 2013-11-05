@@ -3,13 +3,12 @@ from flask import Flask
 from flask import request
 from flask.ext.restful import Api, Resource, marshal, fields, abort
 
-from .models import Session, Race
-from . import db, app
+from .models import Session, Race, db
 
-import pdb
+api = Api()
 
-api = Api(app)
-
+def init_api(app):
+    api.init_app(app)
 
 class SessionAPI(Resource):
 
@@ -45,14 +44,14 @@ class SessionAPI(Resource):
         db.session.add(session)
         db.session.commit()
 
-        return {"message": "Success", "status": 200}
+        return {"message": "Success"}
 
 
     def delete(self, session_id):
         session = self.__get_session_or_abort(session_id)
         db.session.delete(session)
         db.session.commit()
-        return {"message": "Success", "status": 200}
+        return {"message": "Success"}
 
 
 class SessionListAPI(Resource):
@@ -63,14 +62,20 @@ class SessionListAPI(Resource):
 
 
     def post(self):
+        if request.content_type != 'application/json':      
+            abort(400, message="Invalid Content-Type")                                       
+
         data = request.get_json()
+        if not isinstance(data, dict):
+            data = {}
+
         url = data.get('video_url', '')
         s = Session(url)
 
         db.session.add(s)
         db.session.commit()
 
-        return {"message": "Success", "id": s.id, "status": 200}
+        return {"message": "Success", "id": s.id}
 
 
 class RaceAPI(Resource):
@@ -107,27 +112,34 @@ class RaceAPI(Resource):
         db.session.add(race)
         db.session.commit()
 
-        return {"message": "Success", "status": 200}
+        return {"message": "Success"}
 
 
     def delete(self, race_id):
         race = self.__get_session_or_abort(race_id)
         db.session.delete(race)
         db.session.commit()
-        return {'message': "Success", "status":200}
+        return {'message': "Success"}
 
 
 class RaceListAPI(Resource):
     def get(self, session_id):
+        session = Session.query.filter(Session.id == session_id).first()
+        if session is None:
+            abort(404, message="Session {} doesn't exist".format(session_id))
+
         races = Race.query.filter(Race.session_id == session_id).all()
         l = [marshal(r, RaceAPI.fields) for r in races]
         return l
 
 
     def post(self, session_id):
+        if request.content_type != 'application/json':      
+            abort(400, message="Invalid Content-Type")                                       
+
         session = Session.query.filter(Session.id == session_id).first()
         if session is None:
-            abort(404, "Session {} doesn't exist".format(session_id))
+            abort(404, message="Session {} doesn't exist".format(session_id))
 
         data = request.get_json()
         video_url = data.get('video_url', '')
@@ -138,11 +150,12 @@ class RaceListAPI(Resource):
         db.session.add(race)
         db.session.commit()
 
-        return {'message': "Success", 'id':race.id, "status":200}
+        return {'message': "Success", 'id':race.id}
 
 
-api.add_resource(SessionListAPI, '/sessions')
-api.add_resource(SessionAPI, '/sessions/<int:session_id>')
-api.add_resource(RaceListAPI, '/sessions/<int:session_id>/races')
-api.add_resource(RaceAPI, '/races/<int:race_id>')
+def configure_resources():
+    api.add_resource(SessionListAPI, '/sessions')
+    api.add_resource(SessionAPI, '/sessions/<int:session_id>')
+    api.add_resource(RaceListAPI, '/sessions/<int:session_id>/races')
+    api.add_resource(RaceAPI, '/races/<int:race_id>')
 

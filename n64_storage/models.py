@@ -4,7 +4,10 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 import datetime
 
-from . import app, db
+db = SQLAlchemy()
+
+def init_db(app):
+    db.init_app(app)
 
 
 class Session(db.Model):
