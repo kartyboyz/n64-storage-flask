@@ -3,10 +3,8 @@ import os
 import unittest
 import json
 
-from . import app, api, models
+from . import app, models
 from .models import Session, Race
-
-import pdb
 
 
 class StorageTestCase(unittest.TestCase):
@@ -106,7 +104,10 @@ class StorageTestCase(unittest.TestCase):
         resp = self.app.post('/sessions/1/races')
         assert resp.status_code != 200
         resp = self.app.post('/sessions/1/races',
-                data=json.dumps(str(dict())),
+                data=json.dumps({
+                    'start_time':5,
+                    'duration':30
+                }),
                 content_type='application/json')                  
         assert resp.status_code == 200
         data = json.loads(resp.data)
