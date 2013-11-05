@@ -8,6 +8,10 @@ from flask.ext.migrate import Migrate, MigrateCommand
 
 
 if len(sys.argv) > 1 and sys.argv[1] == 'runtests' and not 'CONFIG_MODULE' in os.environ:
+    nose_args = sys.argv[1:]
+    del nose_args[0]
+    if len(sys.argv) > 2:
+        del sys.argv[2:]
     os.environ['CONFIG_MODULE'] = 'n64_storage.config.TestingConfig'
 elif 'CONFIG_MODULE' not in os.environ:
     os.environ['CONFIG_MODULE'] = 'n64_storage.config.DevelopmentConfig'
@@ -23,11 +27,12 @@ manager.add_command('db', MigrateCommand)
 
 @manager.shell
 def shell_context():
-    return dict(app=app, api=api, models=models)
+    return dict(app=app, api=object_api, models=models)
 
 @manager.command
 def runtests():
     del sys.argv[1]
+    sys.argv.extend(nose_args)
     nose.run()
 
 if __name__ == '__main__':
