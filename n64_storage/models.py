@@ -22,7 +22,7 @@ class Session(db.Model):
         self.video_split = False
 
     def __repr__(self):
-        return 'Session(%r, %r)' % (self.date, self.video_url)
+        return 'Session(%r, %r)' % (self.video_url, self.date)
 
 
 class Race(db.Model):
@@ -36,4 +36,7 @@ class Race(db.Model):
         self.session = session
         self.video_url = video_url
         self.race_number = race_number
+
+    def __repr__(self):
+        return "Race(%r, %r, %r)" % (self.session, self.video_url, self.race_number)
 
