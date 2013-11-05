@@ -138,7 +138,7 @@ class RaceListAPI(Resource):
         db.session.add(race)
         db.session.commit()
 
-        return {'message': "Success", "status":200}
+        return {'message': "Success", 'id':race.id, "status":200}
 
 
 api.add_resource(SessionListAPI, '/sessions')
