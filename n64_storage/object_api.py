@@ -16,22 +16,16 @@ class SessionAPI(Resource):
     }
     allowed_updates = ['video_url']
 
-    def __get_session_or_abort(self, session_id):
-        session = Session.query.filter(Session.id == session_id).first()
-        if session is None:
-            abort(404, message="Session {} doesn't exist".format(session_id))
-        return session
-
 
     def get(self, session_id):
-        session = self.__get_session_or_abort(session_id)
+        session = Session.query.get_or_404(session_id)
         return marshal(session, SessionAPI.fields), 200
 
 
     def put(self, session_id):
         data = request.get_json()
 
-        session = self.__get_session_or_abort(session_id)
+        session = Session.query.get_or_404(session_id)
 
         for key, value in data.items():
             if key in SessionAPI.allowed_updates:
@@ -44,7 +38,7 @@ class SessionAPI(Resource):
 
 
     def delete(self, session_id):
-        session = self.__get_session_or_abort(session_id)
+        session = Session.query.get_or_404(session_id)
         db.session.delete(session)
         db.session.commit()
         return {"message": "Success"}
@@ -84,22 +78,16 @@ class RaceAPI(Resource):
     }
     allowed_updates = ['video_url', 'start_time', 'duration']
 
-    def __get_race_or_abort(self, race_id):
-        race = Race.query.filter(Race.id == race_id).first()
-        if race is None:
-            abort(404, message="Race {} doesn't exist".format(race))
-        return race
-
 
     def get(self, race_id):
-        race = self.__get_race_or_abort(race_id)
+        race = Race.query.get_or_404(race_id)
         return marshal(race, RaceAPI.fields), 200
 
 
     def put(self, race_id):
         data = request.get_json()
 
-        race = self.__get_race_or_abort(race_id)
+        race = Race.query.get_or_404(race_id)
 
         for key, value in data.items():
             if key in RaceAPI.allowed_updates:
@@ -112,7 +100,7 @@ class RaceAPI(Resource):
 
 
     def delete(self, race_id):
-        race = self.__get_race_or_abort(race_id)
+        race = Race.query.get_or_404(race_id)
         db.session.delete(race)
         db.session.commit()
         return {'message': "Success"}
@@ -123,12 +111,11 @@ class RaceListAPI(Resource):
     required_fields = ['start_time', 'duration']
 
     def get(self, session_id):
-        session = Session.query.filter(Session.id == session_id).first()
+        session = Session.query.get_or_404(session_id)
         if session is None:
             abort(404, message="Session {} doesn't exist".format(session_id))
 
-        races = Race.query.filter(Race.session_id == session_id).all()
-        l = [marshal(r, RaceAPI.fields) for r in races]
+        l = [marshal(r, RaceAPI.fields) for r in session.races]
         return l
 
 
@@ -136,9 +123,7 @@ class RaceListAPI(Resource):
         if request.content_type != 'application/json':      
             abort(400, message="Invalid Content-Type")                                       
 
-        session = Session.query.filter(Session.id == session_id).first()
-        if session is None:
-            abort(404, message="Session {} doesn't exist".format(session_id))
+        session = Session.query.get_or_404(session_id)
 
         data = request.get_json()
         if not isinstance(data, dict):
