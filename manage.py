@@ -27,7 +27,7 @@ manager.add_command('db', MigrateCommand)
 
 @manager.shell
 def shell_context():
-    return dict(app=app, api=object_api, models=models)
+    return dict(app=app, api=api, models=models)
 
 @manager.command
 def runtests():

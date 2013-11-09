@@ -13,6 +13,7 @@ app.config.from_object(env)
 
 from . import models                            
 from . import object_api
+from . import video_api
 
 api = Api()
 
@@ -20,6 +21,7 @@ def init_api():
     api.init_app(app)
 
 init_api()
-object_api.configure_resources(api)
 models.init_db(app)
+object_api.configure_resources(api)
+video_api.configure_resources(api)
 

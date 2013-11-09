@@ -109,6 +109,7 @@ class RaceAPI(Resource):
 class RaceListAPI(Resource):
 
     required_fields = ['start_time', 'duration']
+    optional_fields = ['video_url']
 
     def get(self, session_id):
         session = Session.query.get_or_404(session_id)
@@ -139,6 +140,10 @@ class RaceListAPI(Resource):
         
         for item in RaceListAPI.required_fields:
             race.__setattr__(item, data[item])
+
+        for item in RaceListAPI.optional_fields:
+            if item in data:
+                race.__setattr__(item, data[item])
 
         race.race_number = race_number
 
