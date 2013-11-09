@@ -17,7 +17,7 @@ def split_video(src, dst, start, end):
 class VideoSplitAPI(Resource):
 
     server_folder = '/home/michael/vid_test/races/{}/'
-    server = 'localhost:8888/races/{}/{}.{}'
+    server = 'http://localhost:8888/races/{}/{}.{}'
 
     def post(self, session_id):
         session = Session.query.get_or_404(session_id)
@@ -44,6 +44,7 @@ class VideoSplitAPI(Resource):
                 chunk = req.read(chunk_size)
                 if not chunk: break
                 f.write(chunk)
+            f.flush()
             return f
 
         except urllib2.HTTPError:
