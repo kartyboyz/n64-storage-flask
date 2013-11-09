@@ -41,3 +41,15 @@ For the list of items, GET and POST are accepted
 
 * GET returns a list of objects in a JSON list
 * POST creates a new object of the given type and returns the new objects id
+
+Session objects have the following attributes available, bold items are
+required.
+
+* video_url: a url where the video file can be found
+
+Race objects accept the following key/value pairs for creation and update,
+bold items are required.
+
+* **start_time**: When in the session the race starts in seconds
+* **duration**: race duration in seconds
+* video_url: the url of where the video can be found
