@@ -28,7 +28,10 @@ class VideoSplitAPI(Resource):
         for race in session.races:
             newfile = self.split_race(vid, race, ext)
             race.video_url = VideoSplitAPI.server.format(session_id, race.id, ext)
+            race.video_split = True
             db.session.add(race)
+        session.video_split = True
+        db.session.add(session)
         db.session.commit()
 
         return {'message':'Video Split Successful'}
