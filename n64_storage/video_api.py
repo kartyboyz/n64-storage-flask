@@ -17,7 +17,7 @@ def split_video(src, dst, start, end):
 class VideoSplitAPI(Resource):
 
     server_folder = '/home/michael/vid_test/races/{}/'
-    server = 'http://localhost:8888/races/{}/{}.{}'
+    server = 'http://192.168.98.180:8888/races/{}/{}.{}'
 
     def post(self, session_id):
         session = Session.query.get_or_404(session_id)
