@@ -74,7 +74,9 @@ class RaceAPI(Resource):
         'id': fields.Integer,
         'session_id': fields.Integer,
         'race_number': fields.Integer,
-        'video_url': fields.String
+        'video_url': fields.String,
+        'start_time' : fields.Integer,
+        'duration' : fields.Integer,
     }
     allowed_updates = ['video_url', 'start_time', 'duration']
 
