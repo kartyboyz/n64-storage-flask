@@ -16,7 +16,7 @@ class StorageTestCase(unittest.TestCase):
         self.app = app.test_client()
         models.db.create_all()
         s = [Session(), Session(), Session()]
-        r = [Race(s[0], '', 1), Race(s[0], '', 2)]
+        r = [Race(s[0], 15, 1), Race(s[0], 50, 2)]
         for i in s: models.db.session.add(i)
         for i in r: models.db.session.add(i)
         models.db.session.commit()
@@ -59,7 +59,7 @@ class StorageTestCase(unittest.TestCase):
         assert 'id' in data                                          
 
 
-    def test_sesion_get(self):
+    def test_session_get(self):
         resp = self.app.get('/sessions/2312341231252')
         assert resp.status_code == 404
         resp = self.app.get('/sessions/1')
