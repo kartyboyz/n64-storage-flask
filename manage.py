@@ -6,6 +6,8 @@ import nose
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 
+orig_argv = sys.argv[:]
+
 
 if len(sys.argv) > 1 and sys.argv[1] == 'runtests' and not 'CONFIG_MODULE' in os.environ:
     nose_args = sys.argv[1:]
@@ -31,9 +33,12 @@ def shell_context():
 
 @manager.command
 def runtests():
-    del sys.argv[1]
-    sys.argv.extend(nose_args)
-    nose.run()
+    #del sys.argv[1]
+    #sys.argv.extend(nose_args)
+    argv=orig_argv[:]
+    del argv[1]
+    argv[0] = 'nosetests'
+    nose.run(argv=argv)
 
 if __name__ == '__main__':
     manager.run()
