@@ -50,3 +50,24 @@ class Race(db.Model):
     def __repr__(self):
         return "Race(%r, %r, %r)" % (self.session, self.video_url, self.race_number)
 
+
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    race_id = db.Column(db.Integer, db.ForeignKey('race.id'))
+    race = db.relationship('Race', backref=db.backref('events'))
+
+    player = db.Column(db.Integer)
+    timestamp = db.Column(db.Numeric(7, 1))
+    lap = db.Column(db.Integer)
+
+    event_type = db.Column(db.Enum("Lap", "Item", "Collision", "Pass", "Shortcut", name='event_type'))
+    event_subtype = db.Column(db.String)
+    event_info = db.Column(db.String)
+
+    linked_event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
+    linked_event = db.relationship('Event', backref=db.backref('linked_from'))
+
+    image_url = db.Column(db.VARCHAR(length=1024))
+
+    def __init__(self, race):
+        self.race = race
