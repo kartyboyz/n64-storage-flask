@@ -16,7 +16,7 @@ class Session(db.Model):
     """
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime)
-    video_url = db.Column(db.VARCHAR(length=100))
+    video_url = db.Column(db.VARCHAR(length=1024))
     video_split = db.Column(db.Boolean)
 
     def __init__(self, video_url='', date=None):
@@ -33,7 +33,7 @@ class Race(db.Model):
     session_id = db.Column(db.Integer, db.ForeignKey('session.id'))
     session = db.relationship('Session', backref=db.backref('races'))
 
-    video_url = db.Column(db.VARCHAR(length=100))
+    video_url = db.Column(db.VARCHAR(length=1024))
     race_number = db.Column(db.Integer)
 
     start_time = db.Column(db.Integer)
