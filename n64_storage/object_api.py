@@ -155,11 +155,85 @@ class RaceListAPI(Resource):
         return {'message': "Success", 'id':race.id}
 
 
+class EventAPI(Resource):
 
+    fields = {
+        'id'             : fields.Integer,
+        'race_id'        : fields.Integer,
+        'player'         : fields.Integer,
+        'lap'            : fields.Integer,
+        'timestamp'      : fields.Fixed(1),
+        'image_url'      : fields.String,
+        'event_type'     : fields.String,
+        'event_subtype'  : fields.String,
+        'event_info'     : fields.String,
+        'linked_event_id': fields.Integer,
+    }
+
+    def get(self, event_id):
+        event = Race.query.get_or_404(event_id)
+        return marshal(event, EventAPI.fields), 200
+
+
+    def delete(self, event_id):
+        event = Race.query.get_or_404(event_id)
+        db.session.delete(event)
+        db.session.commit()
+        return {'message': "Success"}
+
+
+class EventListAPI(Resource):
+
+    required_fields = ['timestamp', 'event_type', 'event_subtype']
+    optional_fields = ['player', 'lap', 'image_url', 'event_info', 
+            'linked_event_id']
+
+    def get(self, race_id):
+        race = Race.query.get_or_404(race_id)
+        if race is None:
+            abort(404, message="Race {} doesn't exist".format(race_id))
+
+        l = [marshal(r, EventAPI.fields) for r in race.events]
+        return l
+
+
+    def post(self, race_id):
+        if request.content_type != 'application/json':      
+            abort(400, message="Invalid Content-Type")                                       
+
+        session = Race.query.get_or_404(race_id)
+
+        data = request.get_json()
+        if not isinstance(data, dict):
+            data = {}
+
+        for item in EventListAPI.required_fields:
+            if not item in data:
+                abort(400, message="Incomplete Request")
+
+        event_number = Event.query.filter(Event.race_id == race_id).count() + 1
+
+        event = Event(race)
+        
+        for item in EventListAPI.required_fields:
+            event.__setattr__(item, data[item])
+
+        for item in EventListAPI.optional_fields:
+            if item in data:
+                event.__setattr__(item, data[item])
+
+        event.event_number = event_number
+
+        db.session.add(event)
+        db.session.commit()
+
+        return {'message': "Success", 'id': event.id}
 
 def configure_resources(api):
     api.add_resource(SessionListAPI, '/sessions')
     api.add_resource(SessionAPI, '/sessions/<int:session_id>')
     api.add_resource(RaceListAPI, '/sessions/<int:session_id>/races')
     api.add_resource(RaceAPI, '/races/<int:race_id>')
+    api.add_resource(EventListAPI, '/races/<int:race_id>/events')
+    api.add_resource(EventAPI, '/events/<int:event_id>')
 
