@@ -9,7 +9,7 @@ from subprocess import call
 import hashlib, tempfile, urllib2, os
 
 def split_video(src, dst, start, end):
-    command = ['ffmpeg', '-i', src, 
+    command = ['ffmpeg', '-i', src,
             '-vcodec', 'copy', '-acodec', 'copy',
             '-ss', str(start), '-t', str(end), dst ]
     call(command)
@@ -24,7 +24,7 @@ class VideoSplitAPI(Resource):
 
         vid = self.download_race(session)
         ext = session.video_url.split('.')[-1]
-        
+
         for race in session.races:
             newfile = self.split_race(vid, race, ext)
             race.video_url = VideoSplitAPI.server.format(session_id, race.id, ext)
@@ -56,7 +56,7 @@ class VideoSplitAPI(Resource):
         except urllib2.URLError:
             print "Couldn't download ", session
             return None
-        
+
 
     def split_race(self, video, race, ext):
         try:

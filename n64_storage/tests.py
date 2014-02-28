@@ -49,14 +49,14 @@ class StorageTestCase(unittest.TestCase):
         assert isinstance(data, list)
 
 
-    def test_session_list_post(self):                           
+    def test_session_list_post(self):
         resp = self.app.post('/sessions', data=json.dumps(str(dict())))
-        assert resp.status_code != 200                           
+        assert resp.status_code != 200
         resp = self.app.post('/sessions', data=json.dumps(str(dict())),
-                content_type='application/json')                  
-        assert resp.status_code == 200                             
-        data = json.loads(resp.data)                                
-        assert 'id' in data                                          
+                content_type='application/json')
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert 'id' in data
 
 
     def test_session_get(self):
@@ -64,7 +64,7 @@ class StorageTestCase(unittest.TestCase):
         assert resp.status_code == 404
         resp = self.app.get('/sessions/1')
         assert resp.status_code == 200
-        
+
         data = json.loads(resp.data)
         assert 'video_url' in data
         assert 'id' in data
@@ -99,7 +99,7 @@ class StorageTestCase(unittest.TestCase):
         resp = self.app.get('/sessions/13412341234/races')
         assert resp.status_code == 404
 
-    
+
     def test_race_list_post(self):
         resp = self.app.post('/sessions/1/races')
         assert resp.status_code != 200
@@ -108,7 +108,7 @@ class StorageTestCase(unittest.TestCase):
                     'start_time':5,
                     'duration':30
                 }),
-                content_type='application/json')                  
+                content_type='application/json')
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert 'id' in data

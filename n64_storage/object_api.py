@@ -52,8 +52,8 @@ class SessionListAPI(Resource):
 
 
     def post(self):
-        if request.content_type != 'application/json':      
-            abort(400, message="Invalid Content-Type")                                       
+        if request.content_type != 'application/json':
+            abort(400, message="Invalid Content-Type")
 
         data = request.get_json()
         if not isinstance(data, dict):
@@ -123,8 +123,8 @@ class RaceListAPI(Resource):
 
 
     def post(self, session_id):
-        if request.content_type != 'application/json':      
-            abort(400, message="Invalid Content-Type")                                       
+        if request.content_type != 'application/json':
+            abort(400, message="Invalid Content-Type")
 
         session = Session.query.get_or_404(session_id)
 
@@ -139,7 +139,7 @@ class RaceListAPI(Resource):
         race_number = Race.query.filter(Race.session_id == session_id).count() + 1
 
         race = Race(session)
-        
+
         for item in RaceListAPI.required_fields:
             race.__setattr__(item, data[item])
 
@@ -185,7 +185,7 @@ class EventAPI(Resource):
 class EventListAPI(Resource):
 
     required_fields = ['timestamp', 'event_type', 'event_subtype']
-    optional_fields = ['player', 'lap', 'image_url', 'event_info', 
+    optional_fields = ['player', 'lap', 'image_url', 'event_info',
             'linked_event_id']
 
     def get(self, race_id):
@@ -198,8 +198,8 @@ class EventListAPI(Resource):
 
 
     def post(self, race_id):
-        if request.content_type != 'application/json':      
-            abort(400, message="Invalid Content-Type")                                       
+        if request.content_type != 'application/json':
+            abort(400, message="Invalid Content-Type")
 
         session = Race.query.get_or_404(race_id)
 
@@ -214,7 +214,7 @@ class EventListAPI(Resource):
         event_number = Event.query.filter(Event.race_id == race_id).count() + 1
 
         event = Event(race)
-        
+
         for item in EventListAPI.required_fields:
             event.__setattr__(item, data[item])
 
