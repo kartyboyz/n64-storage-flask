@@ -2,6 +2,8 @@
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 
+from sqlalchemy.dialects.postgresql import ARRAY
+
 import datetime
 
 db = SQLAlchemy()
@@ -11,9 +13,6 @@ def init_db(app):
 
 
 class Session(db.Model):
-    """
-    
-    """
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime)
     video_url = db.Column(db.VARCHAR(length=1024))
@@ -35,6 +34,9 @@ class Race(db.Model):
 
     video_url = db.Column(db.VARCHAR(length=1024))
     race_number = db.Column(db.Integer)
+
+    characters = db.Column(ARRAY(db.VARCHAR(length=16)))
+    course = db.Column(db.VARCHAR(length=32))
 
     start_time = db.Column(db.Integer)
     duration = db.Column(db.Integer)
