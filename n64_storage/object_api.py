@@ -3,8 +3,9 @@ from flask import Flask
 from flask import request
 from flask.ext.restful import Api, Resource, marshal, fields, abort
 
-from .models import Session, Race, db
+from .models import Session, Race, Event, db
 
+import pdb
 
 class SessionAPI(Resource):
 
@@ -77,8 +78,10 @@ class RaceAPI(Resource):
         'video_url': fields.String,
         'start_time' : fields.Integer,
         'duration' : fields.Integer,
+        'characters': fields.List(fields.String),
+        'course' : fields.String,
     }
-    allowed_updates = ['video_url', 'start_time', 'duration']
+    allowed_updates = ['video_url', 'start_time', 'duration', 'characters', 'course']
 
 
     def get(self, race_id):
@@ -111,7 +114,7 @@ class RaceAPI(Resource):
 class RaceListAPI(Resource):
 
     required_fields = ['start_time', 'duration']
-    optional_fields = ['video_url']
+    optional_fields = ['video_url', 'characters', 'course']
 
     def get(self, session_id):
         session = Session.query.get_or_404(session_id)
@@ -134,6 +137,7 @@ class RaceListAPI(Resource):
 
         for item in RaceListAPI.required_fields:
             if not item in data:
+                print "Missing", item, data
                 abort(400, message="Incomplete Request")
 
         race_number = Race.query.filter(Race.session_id == session_id).count() + 1
@@ -174,8 +178,7 @@ class EventAPI(Resource):
         event = Race.query.get_or_404(event_id)
         return marshal(event, EventAPI.fields), 200
 
-
-    def delete(self, event_id):
+def delete(self, event_id):
         event = Race.query.get_or_404(event_id)
         db.session.delete(event)
         db.session.commit()
@@ -201,11 +204,11 @@ class EventListAPI(Resource):
         if request.content_type != 'application/json':
             abort(400, message="Invalid Content-Type")
 
-        session = Race.query.get_or_404(race_id)
-
         data = request.get_json()
         if not isinstance(data, dict):
             data = {}
+
+        race = Race.query.get_or_404(race_id)
 
         for item in EventListAPI.required_fields:
             if not item in data:
