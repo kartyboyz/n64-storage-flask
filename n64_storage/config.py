@@ -3,7 +3,7 @@
 class Config(object):
     DEBUG = True
     TESTING = False
-    SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://kartyboyz:kartzarecool@n64-database.cjkhmjv2ca1f.us-east-1.rds.amazonaws.com/n64data'
 
 
 class DevelopmentConfig(Config):
@@ -14,6 +14,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     DEBUG = True
     TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite://'
     #SQLALCHEMY_DATABASE_URI
 
 class AWSConfig(Config):
