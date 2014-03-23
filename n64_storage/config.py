@@ -16,3 +16,5 @@ class TestingConfig(Config):
     TESTING = True
     #SQLALCHEMY_DATABASE_URI
 
+class AWSConfig(Config):
+    SQLALCHEMY_DATABASE_URI = 'postgresql://kartyboyz:kartzarecool@n64-database.cjkhmjv2ca1f.us-east-1.rds.amazonaws.com'
