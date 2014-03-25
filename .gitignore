@@ -1,4 +1,7 @@
 env
+env2
 *.pyc
 *.swp
 .noseids
+.elasticbeanstalk/
+.*.un~
