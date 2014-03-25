@@ -41,6 +41,9 @@ class Race(db.Model):
     start_time = db.Column(db.Integer)
     duration = db.Column(db.Integer)
     video_split = db.Column(db.Boolean)
+    processed = db.Column(db.Boolean)
+
+    player_regions = db.Column(ARRAY(db.Integer))
 
     def __init__(self, session, start_time=0, duration=0):
         self.session = session
