@@ -11,7 +11,7 @@ env = os.environ.get('CONFIG_MODULE', 'n64_storage.config.Config')
 app.config.from_object(env)
 
 
-from . import models                            
+from . import models
 from . import object_api
 from . import video_api
 
@@ -23,5 +23,6 @@ def init_api():
 init_api()
 models.init_db(app)
 object_api.configure_resources(api)
+object_api.connect_sqs(app)
 video_api.configure_resources(api)
 

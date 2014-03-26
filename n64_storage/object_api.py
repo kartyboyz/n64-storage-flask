@@ -3,9 +3,17 @@ from flask import Flask
 from flask import request
 from flask.ext.restful import Api, Resource, marshal, fields, abort
 
+from boto import sqs
+from boto.sqs.message import Message
+import json
+
 from .models import Session, Race, Event, db
+from . import app
 
 import pdb
+
+sqs_connection = None
+session_queue = None
 
 class SessionAPI(Resource):
 
@@ -66,6 +74,10 @@ class SessionListAPI(Resource):
         db.session.add(s)
         db.session.commit()
 
+        msg = Message()
+        msg.set_body(json.dumps(marshal(s, SessionAPI.fields)))
+        app.session_queue.write(msg)
+
         return {"message": "Success", "id": s.id}
 
 
@@ -118,7 +130,7 @@ class RaceAPI(Resource):
 class RaceListAPI(Resource):
 
     required_fields = ['start_time', 'duration']
-    optional_fields = ['video_url', 'characters', 'course', 
+    optional_fields = ['video_url', 'characters', 'course',
             'player_regions', '', 'processed', 'video_split']
 
     def get(self, session_id):
@@ -161,6 +173,7 @@ class RaceListAPI(Resource):
 
         db.session.add(race)
         db.session.commit()
+
 
         return {'message': "Success", 'id':race.id}
 
@@ -246,3 +259,10 @@ def configure_resources(api):
     api.add_resource(EventListAPI, '/races/<int:race_id>/events')
     api.add_resource(EventAPI, '/events/<int:event_id>')
 
+def connect_sqs(app):
+    app.sqs_connection = sqs.connect_to_region('us-east-1',
+            aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
+            aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'])
+    app.session_queue = app.sqs_connection.get_queue('split-queue')
+    app.session_queue.set_timeout(60*15)
+    #app.sqs = sqs_connection
