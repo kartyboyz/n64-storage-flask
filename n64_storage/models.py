@@ -51,6 +51,11 @@ class Race(db.Model):
         self.duration = duration
         self.video_url = ''
         self.race_number = 0
+        self.video_split = False
+        self.processed = False
+        self.player_regions = []
+        self.characters = []
+        self.course = ''
 
     def __repr__(self):
         return "Race(%r, %r, %r)" % (self.session, self.video_url, self.race_number)

@@ -79,9 +79,13 @@ class RaceAPI(Resource):
         'start_time' : fields.Integer,
         'duration' : fields.Integer,
         'characters': fields.List(fields.String),
+        'player_regions' : fields.List(fields.List(fields.Integer)),
         'course' : fields.String,
+        'processed' : fields.Boolean,
+        'video_split': fields.Boolean,
     }
-    allowed_updates = ['video_url', 'start_time', 'duration', 'characters', 'course']
+    allowed_updates = ['video_url', 'start_time', 'duration', 'characters',
+            'course', 'player_regions', 'processed', 'video_split']
 
 
     def get(self, race_id):
@@ -114,7 +118,8 @@ class RaceAPI(Resource):
 class RaceListAPI(Resource):
 
     required_fields = ['start_time', 'duration']
-    optional_fields = ['video_url', 'characters', 'course']
+    optional_fields = ['video_url', 'characters', 'course', 
+            'player_regions', '', 'processed', 'video_split']
 
     def get(self, session_id):
         session = Session.query.get_or_404(session_id)
@@ -149,6 +154,7 @@ class RaceListAPI(Resource):
 
         for item in RaceListAPI.optional_fields:
             if item in data:
+                print item, data
                 race.__setattr__(item, data[item])
 
         race.race_number = race_number
