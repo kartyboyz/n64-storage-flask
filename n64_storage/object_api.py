@@ -174,6 +174,10 @@ class RaceListAPI(Resource):
         db.session.add(race)
         db.session.commit()
 
+        msg = Message()
+        msg.set_body(json.dumps(marshal(race, RaceAPI.fields)))
+        app.race_queue.write(msg)
+
 
         return {'message': "Success", 'id':race.id}
 
@@ -260,9 +264,7 @@ def configure_resources(api):
     api.add_resource(EventAPI, '/events/<int:event_id>')
 
 def connect_sqs(app):
-    app.sqs_connection = sqs.connect_to_region('us-east-1',
-            aws_access_key_id=app.config['AWS_ACCESS_KEY_ID'],
-            aws_secret_access_key=app.config['AWS_SECRET_ACCESS_KEY'])
+    app.sqs_connection = sqs.connect_to_region('us-east-1')
     app.session_queue = app.sqs_connection.get_queue('split-queue')
     app.session_queue.set_timeout(60*15)
-    #app.sqs = sqs_connection
+    app.race_queue = app.sqs_connection.get_queue('process-queue')
