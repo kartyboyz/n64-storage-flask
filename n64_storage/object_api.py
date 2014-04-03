@@ -10,6 +10,7 @@ import json
 from .models import Session, Race, Event, db
 from . import app
 
+import os
 import pdb
 
 sqs_connection = None
@@ -264,7 +265,12 @@ def configure_resources(api):
     api.add_resource(EventAPI, '/events/<int:event_id>')
 
 def connect_sqs(app):
-    app.sqs_connection = sqs.connect_to_region('us-east-1')
+    access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+    secret_key = os.getenv('AWS_SECRET_KEY')
+    app.sqs_connection = sqs.connect_to_region('us-east-1',
+            aws_secret_access_key=secret_key,
+            aws_access_key_id=access_key_id)
     app.session_queue = app.sqs_connection.get_queue('split-queue')
     app.session_queue.set_timeout(60*15)
     app.race_queue = app.sqs_connection.get_queue('process-queue')
+
