@@ -92,7 +92,7 @@ class RaceAPI(Resource):
         'start_time' : fields.Integer,
         'duration' : fields.Integer,
         'characters': fields.List(fields.String),
-        'player_regions' : fields.List(fields.List(fields.Integer)),
+        'player_regions' : fields.List(fields.List(fields.List(fields.Integer))),
         'course' : fields.String,
         'processed' : fields.Boolean,
         'video_split': fields.Boolean,
@@ -132,7 +132,7 @@ class RaceListAPI(Resource):
 
     required_fields = ['start_time', 'duration']
     optional_fields = ['video_url', 'characters', 'course',
-            'player_regions', '', 'processed', 'video_split']
+            'player_regions', 'processed', 'video_split']
 
     def get(self, session_id):
         session = Session.query.get_or_404(session_id)
