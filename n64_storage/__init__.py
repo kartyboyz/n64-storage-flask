@@ -23,6 +23,9 @@ def init_api():
 init_api()
 models.init_db(app)
 object_api.configure_resources(api)
-object_api.connect_sqs(app)
+
+if app.config['SEND_MESSAGES']:
+    object_api.connect_sqs(app)
+
 video_api.configure_resources(api)
 

@@ -13,8 +13,6 @@ from . import app
 import os
 import pdb
 
-sqs_connection = None
-session_queue = None
 
 class SessionAPI(Resource):
 
@@ -75,9 +73,10 @@ class SessionListAPI(Resource):
         db.session.add(s)
         db.session.commit()
 
-        msg = Message()
-        msg.set_body(json.dumps(marshal(s, SessionAPI.fields)))
-        app.session_queue.write(msg)
+        if app.config['SEND_MESSAGES']:
+            msg = Message()
+            msg.set_body(json.dumps(marshal(s, SessionAPI.fields)))
+            app.session_queue.write(msg)
 
         return {"message": "Success", "id": s.id}
 
@@ -155,7 +154,6 @@ class RaceListAPI(Resource):
 
         for item in RaceListAPI.required_fields:
             if not item in data:
-                print "Missing", item, data
                 abort(400, message="Incomplete Request")
 
         race_number = Race.query.filter(Race.session_id == session_id).count() + 1
@@ -167,7 +165,6 @@ class RaceListAPI(Resource):
 
         for item in RaceListAPI.optional_fields:
             if item in data:
-                print item, data
                 race.__setattr__(item, data[item])
 
         race.race_number = race_number
@@ -175,9 +172,10 @@ class RaceListAPI(Resource):
         db.session.add(race)
         db.session.commit()
 
-        msg = Message()
-        msg.set_body(json.dumps(marshal(race, RaceAPI.fields)))
-        app.race_queue.write(msg)
+        if app.config['SEND_MESSAGES']:
+            msg = Message()
+            msg.set_body(json.dumps(marshal(race, RaceAPI.fields)))
+            app.race_queue.write(msg)
 
 
         return {'message': "Success", 'id':race.id}
