@@ -7,8 +7,6 @@ from flask.ext.restful import Api
 
 app = Flask(__name__)
 
-env = os.environ.get('CONFIG_MODULE', 'n64_storage.config.Config')
-app.config.from_object(env)
 
 
 from . import models
@@ -17,15 +15,17 @@ from . import video_api
 
 api = Api()
 
-def init_api():
+def configure():
+    env = os.environ.get('CONFIG_MODULE', 'n64_storage.config.Config')
+    app.config.from_object(env)
+
     api.init_app(app)
 
-init_api()
-models.init_db(app)
-object_api.configure_resources(api)
+    models.init_db(app)
+    object_api.configure_resources(api)
 
-if app.config['SEND_MESSAGES']:
-    object_api.connect_sqs(app)
+    if app.config['SEND_MESSAGES']:
+        object_api.connect_sqs(app)
 
-video_api.configure_resources(api)
+    video_api.configure_resources(api)
 

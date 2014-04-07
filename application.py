@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import n64_storage
+n64_storage.configure()
 
 application = n64_storage.app
 

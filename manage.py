@@ -19,6 +19,8 @@ elif 'CONFIG_MODULE' not in os.environ:
     os.environ['CONFIG_MODULE'] = 'n64_storage.config.DevelopmentConfig'
 
 
+import n64_storage
+n64_storage.configure()
 from n64_storage import app, models, api
 
 migrate = Migrate(app, models.db)
