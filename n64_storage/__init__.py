@@ -12,6 +12,7 @@ app = Flask(__name__)
 from . import models
 from . import object_api
 from . import video_api
+from . import tests
 
 api = Api()
 
