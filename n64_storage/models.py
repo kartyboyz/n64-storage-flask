@@ -33,6 +33,8 @@ class Race(db.Model):
     session = db.relationship('Session', backref=db.backref('races'))
 
     video_url = db.Column(db.VARCHAR(length=1024))
+    audio_url = db.Column(db.VARCHAR(length=1024))
+    video_processed_url = db.Column(db.VARCHAR(length=1024))
     race_number = db.Column(db.Integer)
 
     characters = db.Column(ARRAY(db.VARCHAR(length=16)))
@@ -42,6 +44,7 @@ class Race(db.Model):
     duration = db.Column(db.Integer)
     video_split = db.Column(db.Boolean)
     processed = db.Column(db.Boolean)
+    audio_processed = db.Column(db.Boolean)
 
     player_regions = db.Column(ARRAY(db.Integer))
 
@@ -50,9 +53,11 @@ class Race(db.Model):
         self.start_time = start_time
         self.duration = duration
         self.video_url = ''
+        self.audio_url = ''
         self.race_number = 0
         self.video_split = False
         self.processed = False
+        self.audio_processed = False
         self.player_regions = []
         self.characters = []
         self.course = ''
@@ -71,8 +76,9 @@ class Event(db.Model):
     player = db.Column(db.Integer)
     timestamp = db.Column(db.Numeric(7, 1))
     lap = db.Column(db.Integer)
+    place = db.Column(db.Integer)
 
-    event_type = db.Column(db.Enum("Lap", "Item", "Collision", "Pass", "Shortcut", "Tag", name='event_type'))
+    event_type = db.Column(db.Enum("Lap", "Item", "Collision", "Pass", "Shortcut", "Tag", "Fall", "Reverse", name='event_type'))
     event_subtype = db.Column(db.String)
     event_info = db.Column(db.String)
 
