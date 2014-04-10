@@ -3,9 +3,9 @@ import os
 import unittest
 import json
 
-from . import app, models
-from .models import Session, Race
-
+from .. import app, models
+from ..models import Session, Race
+from .. import query as q
 
 class StorageTestCase(unittest.TestCase):
 
@@ -142,4 +142,5 @@ class StorageTestCase(unittest.TestCase):
         assert r.status_code == 200
         r = self.app.get('/races/2')
         assert r.status_code == 404
+
 
