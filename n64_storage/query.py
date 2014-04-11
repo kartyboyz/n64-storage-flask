@@ -78,6 +78,8 @@ class EventQuery(object):
         self.query_str = query_str
         self.parse()
         self.gen_query()
+        self.ident_cache = dict()
+        self.alias_cache = dict()
 
     def parse(self):
         self.parsed = query_parser.parseString(self.query_str)
@@ -91,6 +93,9 @@ class EventQuery(object):
 
         for condition in self.parsed[1]:
             self.append_condition(condition)
+
+    def identifier(self, ident):
+        pass
 
     def append_output(self, output):
         pass
