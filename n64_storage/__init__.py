@@ -13,6 +13,8 @@ from . import models
 from . import object_api
 from . import video_api
 from . import tests
+from . import query
+from . import parser
 
 api = Api()
 

@@ -33,12 +33,12 @@ event_spec = Group(event_type_spec + Suppress('.') + Optional(subtype_spec))
 
 field_spec = Optional(oneOf(event_fields), default='id')
 
-count_spec = Group(CaselessKeyword('count') + subtype_spec) + field_spec
-average_spec = Group(CaselessKeyword('average') + subtype_spec) + field_spec
-percent_spec = Group(CaselessKeyword('percent') + subtype_spec) + field_spec
-top_spec = Group(CaselessKeyword('top') + Word(nums) + subtype_spec) + field_spec
-bottom_spec = Group(CaselessKeyword('bottom') + Word(nums) + subtype_spec) + field_spec
-default_spec = Group(Optional(CaselessKeyword('out'), default="out") + subtype_spec) + field_spec
+count_spec = CaselessKeyword('count') + subtype_spec + field_spec
+average_spec = CaselessKeyword('average') + subtype_spec + field_spec
+percent_spec = CaselessKeyword('percent') + subtype_spec + field_spec
+top_spec = CaselessKeyword('top') + Word(nums) + subtype_spec + field_spec
+bottom_spec = CaselessKeyword('bottom') + Word(nums) + subtype_spec + field_spec
+default_spec = Optional(CaselessKeyword('out'), default="out") + subtype_spec + field_spec
 
 select_spec = Group(count_spec | average_spec | percent_spec | top_spec | bottom_spec | default_spec)
 selection_statement = delimitedList(select_spec)
@@ -48,19 +48,19 @@ boolean_spec = CaselessKeyword(booleans[0])
 for b in booleans[1:]:
     boolean_spec |= CaselessKeyword(b)
 
-on_spec = Group(CaselessKeyword('on') + oneOf(courses, caseless=True))
-with_spec = Group(CaselessKeyword('with') + oneOf(players, caseless=True))
-per_spec = Group(CaselessKeyword('per') + oneOf(['lap', 'race'], caseless=True))
-by_spec = Group(CaselessKeyword('by') + subtype_spec + field_spec)
+on_spec = CaselessKeyword('on') + oneOf(courses, caseless=True)
+with_spec = CaselessKeyword('with') + oneOf(players, caseless=True)
+per_spec = CaselessKeyword('per') + oneOf(['lap', 'race'], caseless=True)
+by_spec = CaselessKeyword('by') + subtype_spec + field_spec
 default_cond_spec = subtype_spec
-less_spec = Group(CaselessKeyword('less') + Suppress('than') + Word(nums) + default_spec)
-more_spec = Group(CaselessKeyword('more') + Suppress('than') + Word(nums) + default_spec)
+less_spec = CaselessKeyword('less') + Suppress('than') + Word(nums) + default_spec
+more_spec = CaselessKeyword('more') + Suppress('than') + Word(nums) + default_spec
 
 
 condition_statement = Forward()
 
 cond_spec = on_spec | with_spec | by_spec | per_spec | less_spec | more_spec | default_cond_spec | (Suppress('(') + condition_statement + Suppress(')'))
-neg_cond_spec = Group(Optional(boolean_spec, default='and') + cond_spec)
+neg_cond_spec = Group(Optional(boolean_spec, default='and') + Group(cond_spec))
 
 condition_statement << delimitedList(neg_cond_spec)
 
