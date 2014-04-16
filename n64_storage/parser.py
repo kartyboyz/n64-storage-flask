@@ -5,7 +5,7 @@ from pyparsing import Forward, Group, delimitedList, Optional
 from pyparsing import alphanums, nums
 
 event_types = ['Lap', 'Item', 'Collision', 'Pass', 'Shortcut', 'Tag', 'Fall', 'Reverse']
-event_subtypes = ['Get', 'Use', 'Steal', 'Stolen', 'Passing', 'Passed', 'Start', 'Lap', 'Finish', 'Shortcut', 'Watch', 'Tag', 'Banana', 'Spin', 'Crash']
+event_subtypes = ['Race', 'Session', 'Get', 'Use', 'Steal', 'Stolen', 'Passing', 'Passed', 'Start', 'Lap', 'Finish', 'Shortcut', 'Watch', 'Tag', 'Banana', 'Spin', 'Crash']
 event_fields = ['id', 'lap', 'info', 'subtype', 'type', 'place', 'player']
 race_fields = ['course', 'characters']
 
@@ -36,11 +36,14 @@ field_spec = Optional(oneOf(event_fields), default='info')
 count_spec = CaselessKeyword('count') + subtype_spec + field_spec
 average_spec = CaselessKeyword('average') + subtype_spec + field_spec
 percent_spec = CaselessKeyword('percent') + subtype_spec + field_spec
+min_spec = CaselessKeyword('min') + subtype_spec + field_spec
+max_spec = CaselessKeyword('max') + subtype_spec + field_spec
 top_spec = CaselessKeyword('top') + Word(nums) + subtype_spec + field_spec
 bottom_spec = CaselessKeyword('bottom') + Word(nums) + subtype_spec + field_spec
 default_spec = Optional(CaselessKeyword('out'), default="out") + subtype_spec + field_spec
 
-select_spec = Group(count_spec | average_spec | percent_spec | top_spec | bottom_spec | default_spec)
+select_spec = Group(count_spec | average_spec | percent_spec | top_spec | bottom_spec |
+        min_spec | max_spec | default_spec)
 selection_statement = delimitedList(select_spec)
 
 
@@ -52,8 +55,8 @@ on_spec = CaselessKeyword('on') + oneOf(courses, caseless=True)
 with_spec = CaselessKeyword('with') + oneOf(players, caseless=True)
 per_spec = CaselessKeyword('per') + oneOf(['lap', 'race'], caseless=True)
 by_spec = CaselessKeyword('by') + subtype_spec + field_spec
-less_spec = CaselessKeyword('less') + Suppress('than') + Word(nums) + default_spec
-more_spec = CaselessKeyword('more') + Suppress('than') + Word(nums) + default_spec
+less_spec = CaselessKeyword('less') + Suppress('than') + Word(nums) + subtype_spec + field_spec
+more_spec = CaselessKeyword('more') + Suppress('than') + Word(nums) + subtype_spec + field_spec
 lap_spec = CaselessKeyword('lap') + Word(nums) + subtype_spec
 place_spec = CaselessKeyword('place') + Word(nums) + subtype_spec
 
