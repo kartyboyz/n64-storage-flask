@@ -10,6 +10,8 @@ import json
 from .models import Session, Race, Event, db
 from . import app
 
+from .query import EventQuery
+
 import os
 import pdb
 
@@ -268,6 +270,24 @@ class UserRaceListApi(Resource):
         return [marshal(r, RaceAPI.fields) for r in races]
 
 
+class QueryAPI(Resource):
+    def get(self):
+        query = request.get_json()
+
+        if query is None:
+            abort(400, message="Require query data")
+
+        if 'query' not in query:
+            abort(400, message="Require query")
+
+        eq = EventQuery(query['query'], query.get(user, None))
+        ret = {
+            'query': query['body'],
+            'results': eq.query.all()
+        }
+        return ret
+
+
 def configure_resources(api):
     api.add_resource(SessionListAPI, '/sessions')
     api.add_resource(SessionAPI, '/sessions/<int:session_id>')
@@ -277,6 +297,7 @@ def configure_resources(api):
     api.add_resource(EventAPI, '/events/<int:event_id>')
     api.add_resource(UserSessionListApi, '/users/<user>/sessions')
     api.add_resource(UserRaceListApi, '/users/<user>/races')
+    api.add_resource(QueryAPI, '/query')
 
 def connect_sqs(app):
     access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
