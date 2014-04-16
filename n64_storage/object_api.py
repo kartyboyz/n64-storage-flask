@@ -281,7 +281,10 @@ class QueryAPI(Resource):
         if 'query' not in query:
             abort(400, message="Require query")
 
-        eq = EventQuery(query['query'], query.get('user', None))
+        try:
+            eq = EventQuery(query['query'], query.get('user', None))
+        except:
+            abort(400, "Query was invalid for some reason")
         ret = {
             'query': query['query'],
             'results': eq.query.all()

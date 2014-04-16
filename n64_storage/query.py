@@ -93,7 +93,7 @@ class EventQuery(object):
         for o in self.parsed[0]:
             self.__output(o)
 
-        if not self.ordered:
+        if not self.ordered and len(self.parsed[0]) > 1:
             for item in self.parsed[0]:
                 if self.__order(self.parsed[0][0]):
                     break
@@ -106,7 +106,6 @@ class EventQuery(object):
 
     def __gen_aliases(self):
         for ident in self.ident_cache.keys():
-            print ident
             if len(self.alias_cache) == 0:
                 self.alias_cache[ident] = TableWrapper(m.Event)
             else:
@@ -114,9 +113,10 @@ class EventQuery(object):
 
 
     def __join(self):
-        base = self.alias_cache.values()[0]
-        for table in self.alias_cache.values()[1:]:
-            self.query = self.query.join(table, base.race_id==table.race_id)
+        if len(self.alias_cache.values()) > 0:
+            base = self.alias_cache.values()[0]
+            for table in self.alias_cache.values()[1:]:
+                self.query = self.query.join(table, base.race_id==table.race_id)
 
 
     def __order(self, output):
@@ -153,8 +153,9 @@ class EventQuery(object):
         # handle all the simple verbs that don't need a special table
         if verb in ['with', 'on', 'per']:
             if verb == 'with':
-                for tab in self.alias_cache.itervalues():
-                    self.__with(tab, c[2], bool_op)
+                for key, tab in self.alias_cache.iteritems():
+                    if key not in ['Race', 'Session']:
+                        self.__with(tab, c[2], bool_op)
             elif verb == 'on':
                 self.__on(c[2], bool_op)
             elif verb == 'per':
