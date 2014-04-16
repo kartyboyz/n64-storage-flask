@@ -19,10 +19,11 @@ class SessionAPI(Resource):
     fields = {
         'id': fields.Integer,
         'date': fields.DateTime,
+        'owner': fields.String,
         'video_url': fields.String,
         'video_split': fields.Boolean,
     }
-    allowed_updates = ['video_url']
+    allowed_updates = ['video_url', 'video_split', 'owner']
 
 
     def get(self, session_id):
@@ -68,7 +69,9 @@ class SessionListAPI(Resource):
             data = {}
 
         url = data.get('video_url', '')
+        owner = data.get('owner', '')
         s = Session(url)
+        s.owner = owner
 
         db.session.add(s)
         db.session.commit()
@@ -254,6 +257,17 @@ class EventListAPI(Resource):
 
         return {'message': "Success", 'id': event.id}
 
+class UserSessionListApi(Resource):
+    def get(self, user):
+        sessions = db.session.query(Session).filter(Session.owner == user)
+        return [marshal(s, SessionAPI.fields) for s in sessions]
+
+class UserRaceListApi(Resource):
+    def get(self, user):
+        races = db.session.query(Race).join(Session).filter(Session.owner == user)
+        return [marshal(r, RaceAPI.fields) for r in races]
+
+
 def configure_resources(api):
     api.add_resource(SessionListAPI, '/sessions')
     api.add_resource(SessionAPI, '/sessions/<int:session_id>')
@@ -261,6 +275,8 @@ def configure_resources(api):
     api.add_resource(RaceAPI, '/races/<int:race_id>')
     api.add_resource(EventListAPI, '/races/<int:race_id>/events')
     api.add_resource(EventAPI, '/events/<int:event_id>')
+    api.add_resource(UserSessionListApi, '/users/<user>/sessions')
+    api.add_resource(UserRaceListApi, '/users/<user>/races')
 
 def connect_sqs(app):
     access_key_id = os.getenv('AWS_ACCESS_KEY_ID')

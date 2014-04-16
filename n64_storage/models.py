@@ -17,6 +17,7 @@ class Session(db.Model):
     date = db.Column(db.DateTime)
     video_url = db.Column(db.VARCHAR(length=1024))
     video_split = db.Column(db.Boolean)
+    owner = db.Column(db.String)
 
     def __init__(self, video_url='', date=None):
         self.date = date if date is not None else datetime.datetime.now()
