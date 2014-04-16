@@ -16,3 +16,4 @@ psycopg2==2.5.1
 six==1.4.1
 wsgiref==0.1.2
 boto==2.27.0
+pyparsing==2.0.1
