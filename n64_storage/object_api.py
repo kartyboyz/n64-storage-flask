@@ -132,6 +132,11 @@ class RaceAPI(Resource):
         return {'message': "Success"}
 
 
+class AllRaceAPI(Resource):
+    def get(self):
+        l = [marshal(r, RaceAPI.fields) for r in Race.query.all()]
+        return l
+
 class RaceListAPI(Resource):
 
     required_fields = ['start_time', 'duration']
@@ -297,6 +302,7 @@ def configure_resources(api):
     api.add_resource(SessionAPI, '/sessions/<int:session_id>')
     api.add_resource(RaceListAPI, '/sessions/<int:session_id>/races')
     api.add_resource(RaceAPI, '/races/<int:race_id>')
+    api.add_resource(AllRaceAPI, '/races')
     api.add_resource(EventListAPI, '/races/<int:race_id>/events')
     api.add_resource(EventAPI, '/events/<int:event_id>')
     api.add_resource(UserSessionListApi, '/users/<user>/sessions')
