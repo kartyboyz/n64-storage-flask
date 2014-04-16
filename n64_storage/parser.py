@@ -9,7 +9,7 @@ event_subtypes = ['Get', 'Use', 'Steal', 'Stolen', 'Passing', 'Passed', 'Start',
 event_fields = ['id', 'lap', 'info', 'subtype', 'type', 'place', 'player']
 race_fields = ['course', 'characters']
 
-booleans = ['and', 'or', 'not']
+booleans = ['and', 'not']
 conditions = ['on', 'by', 'with']
 
 players = ['Yoshi', 'Toad', 'Peach', 'Bowser', 'Mario', 'Luigi', 'Bowser', 'DonkeyKong']
@@ -31,7 +31,7 @@ subtype_spec = Group(event_subtype_spec + Optional(Suppress('.') + info_spec))
 event_spec = Group(event_type_spec + Suppress('.') + Optional(subtype_spec))
 
 
-field_spec = Optional(oneOf(event_fields), default='id')
+field_spec = Optional(oneOf(event_fields), default='info')
 
 count_spec = CaselessKeyword('count') + subtype_spec + field_spec
 average_spec = CaselessKeyword('average') + subtype_spec + field_spec
@@ -52,18 +52,22 @@ on_spec = CaselessKeyword('on') + oneOf(courses, caseless=True)
 with_spec = CaselessKeyword('with') + oneOf(players, caseless=True)
 per_spec = CaselessKeyword('per') + oneOf(['lap', 'race'], caseless=True)
 by_spec = CaselessKeyword('by') + subtype_spec + field_spec
-default_cond_spec = subtype_spec
 less_spec = CaselessKeyword('less') + Suppress('than') + Word(nums) + default_spec
 more_spec = CaselessKeyword('more') + Suppress('than') + Word(nums) + default_spec
+lap_spec = CaselessKeyword('lap') + Word(nums) + subtype_spec
+place_spec = CaselessKeyword('place') + Word(nums) + subtype_spec
+
+default_cond_spec = Optional(CaselessKeyword('where'), default='where') + subtype_spec
 
 
-condition_statement = Forward()
+#condition_statement = Forward()
 
-cond_spec = on_spec | with_spec | by_spec | per_spec | less_spec | more_spec | default_cond_spec | (Suppress('(') + condition_statement + Suppress(')'))
-neg_cond_spec = Group(Optional(boolean_spec, default='and') + Group(cond_spec))
+cond_spec = on_spec | with_spec | by_spec | per_spec | less_spec | more_spec \
+        | lap_spec | place_spec | default_cond_spec
 
-condition_statement << delimitedList(neg_cond_spec)
+neg_cond_spec = Group(Optional(boolean_spec, default='and') + cond_spec)
 
+condition_statement = delimitedList(neg_cond_spec)
 
 query_spec = Group(selection_statement) + Suppress(':') + Group(condition_statement)
 

@@ -36,6 +36,7 @@ class EventQuery(object):
         self.query_str = query_str
         self.ident_cache = dict()
         self.alias_cache = dict()
+        self.query = None
         self.parse()
         self.gen_query()
 
@@ -50,21 +51,28 @@ class EventQuery(object):
 
         # Get a list of all the tables we need to filter by
         for condition in self.parsed[1]:
-            self.__cache_identifier(condition[1][1])
+            if condition[0] != 'not':
+                if condition[1] in ['by', 'where']:
+                    self.__cache_identifier(condition[2])
+                elif condition[1] not in ['with', 'on', 'per']:
+                    self.__cache_identifier(condition[3])
 
         # and the ones we need to output
         for output in self.parsed[0]:
-            self.__cache_identifier(output[1])
+            if output[0] in ['count', 'average', 'percent', 'out']:
+                self.__cache_identifier(output[1])
+            elif output[0] in ['top', 'bottom']:
+                self.__cache_identifier(output[2])
 
         # generate an alias for each table and join on race_id
         self.__gen_aliases()
         self.__join()
-        self.__filter(self.parsed[1])
+        for f in self.parsed[1]:
+            self.__filter(f)
         for o in self.parsed[0]:
             self.__output(o)
 
     def __cache_identifier(self, ident):
-        print ident
         idhash = ''.join(ident.asList())
         self.ident_cache[idhash] = ident.asList()
 
@@ -81,58 +89,157 @@ class EventQuery(object):
             self.query = self.query.join(table, base.race_id==table.race_id)
 
 
-    def __filter(self, cond):
-        for c in cond:
-            #bool_op = c[0]
-            rest = c[1]
-            verb = rest[0]
+    def __find_filter_selector(self, cond):
+        if cond[1] in ['per', 'with', 'on']:
+            return None
+        elif cond[1] in ['by', 'where']:
+            return cond[2]
+        elif cond[1] in ['more', 'less', 'lap', 'place']:
+            return cond[3]
+        else:
+            return None
 
-            if verb in ['with', 'on']:
-                if verb == 'with':
-                    self.query = self.query.filter(m.Race.characters[m.Event.player] == rest[1])
-                elif verb == 'on':
-                    self.query = self.query.filter(m.Race.course == rest[1])
-                else:
-                    return
+    def __filter(self, c):
+        bool_op = c[0]
+        verb = c[1]
 
-            sel = rest[1]
-            col = self.lang_to_column[sel[-1]]
-            tab = self.alias_cache[''.join(sel)]
-            print tab
+        selector = self.__find_filter_selector(c)
 
-            if verb == 'by':
-                print "self.query.group_by(tab.__getattr__(%s))" % col
-                self.query = self.query.group_by(tab.__getattr__(col))
+        # handle all the simple verbs that don't need a special table
+        if verb in ['with', 'on', 'per']:
+            if verb == 'with':
+                for tab in self.alias_cache.itervalues():
+                    self.__with(tab, c[2], bool_op)
+            elif verb == 'on':
+                self.__on(c[2], bool_op)
             elif verb == 'per':
-                pass
-            elif verb == 'less':
-                pass
-            elif verb == 'more':
-                pass
-            else:
-                print "self.query.filter(tab.event_info == %s)" % col
-                self.query = self.query.filter(tab.event_info == sel[-1])
+                self.__per(c[2])
+
+        table = self.alias_cache[''.join(selector)] if selector else None
+
+        if verb == 'by':
+            self.__by(table, selector)
+        elif verb == 'less':
+            pass
+        elif verb == 'more':
+            pass
+        elif verb == 'place':
+            self.__place(table, int(c[2]), selector, bool_op)
+        elif verb == 'lap':
+            self.__lap(table, int(c[2]), selector, bool_op)
+        else:
+            self.__default_filter(tab, column, bool_op)
+
+
+    def __with(self, tab, char, neg=False):
+        if neg:
+            self.query = self.query.filter(m.Race.characters[tab.player] != char)
+        else:
+            self.query = self.query.filter(m.Race.characters[tab.player] == char)
+
+
+    def __on(self, course, neg=None):
+        if neg:
+            self.query = self.query.filter(m.Race.course != course)
+        else:
+            self.query = self.query.filter(m.Race.course == course)
+
+
+    def __place(self, table, place, selector, neg=False):
+        self.query = self.query.filter(table.place == place)
+        self.__default_query(table, selector)
+
+
+    def __lap(self, tab, lap, selector, neg=False):
+        self.query = self.query.filter(tab.lap == lap)
+        self.__default_query(table, selector)
+
+
+    def __by(self, table, selector):
+        column = self.lang_to_column(selector[1], 'event_info')
+        self.query = self.query.group_by(table.__getattr__(column))
+        self.query = self.query.filter(table.event_subtype == sub)
+        if inf:
+            self.query = self.query.filter(table.event_subtype == sel[0])
+
+
+    def __per(self, table, item_type):
+        self.query = self.query.filter(
+                m.Event.__getattr__(item_type) == table.__getattr__(item_type))
+
+
+    def __less(self):
+        pass
+
+    def __more(self):
+        pass
+
+
+    def __default_filter(self, table, selector, neg=False):
+        self.query = self.query.filter(table.event_subtype == selector[0])
+        if len(selector) > 1:
+            self.query = self.query.filter(tab.event_info == selector[1])
+
 
     def __output(self, o):
         func = o[0]
-        what = self.lang_to_column[o[-1]]
+        out_field = self.lang_to_column[o[-1]]
 
         if func in ['top', 'bottom']:
             lim = int(o[1])
-            self.query = self.query.limit(lim)
-            self.query = self.query.order_by()
+            tab = self.alias_cache[''.join(o[2])]
+            field = o[-1]
+            if func == 'top':
+                self.__top(tab, field, lim)
+            elif func == 'bottom':
+                self.__bottom(tab, field, lim)
+            return
 
         tab = self.alias_cache[''.join(o[1])]
-        print tab
-        #sel = o[-1]
 
         if func == 'count':
-            print "self.query.add_columns(f.count(tab.__getattr__(%s)))" % what
-            self.query = self.query.add_columns(f.count(tab.__getattr__(what)))
+            self.__count(tab, o[1], out_field)
         elif func == 'average':
-            pass
+            self.__average(tab, o[1], out_field)
         elif func == 'percent':
-            pass
-        else: # out
-            print "self.query.add_columns(tab.__getattr__(%s))" % what
-            self.query = self.query.add_columns(tab.__getattr__(what))
+            self.__percent(tab, o[1], out_field)
+        else:
+            self.__default_output(tab, o[1], out_field)
+
+
+    def __top(self, table, field, count):
+        self.query = self.query.order_by(table.__getattr__(field))
+        self.query = self.query.limit(count)
+
+
+    def __bottom(self, table, column, field, count):
+        self.query = self.query.order_by(table.__getattr__(field).desc())
+        self.query = self.query.limit(count)
+
+
+    def __count(self, table, column, field):
+        self.query = self.query.add_columns(f.count(table.__getattr(field)))
+        self.query = self.query.filter(table.event_subtype == column[0])
+        if len(column) > 1:
+            self.query = self.query.filter(table.event_info == column[1])
+
+
+    def __average(self, table, column, field):
+        self.query = self.query.add_columns(f.average(table.__getattr(field)))
+        self.query = self.query.filter(table.event_subtype == column[0])
+        if len(column) > 1:
+            self.query = self.query.filter(table.event_info == column[1])
+
+
+    def __percent(self, table, column, field):
+        # this one is hard
+        pass
+
+
+    def __default_output(self, table, column, field):
+        self.query = self.query.add_columns(table.__getattr__(field))
+        self.query = self.query.filter(table.event_subtype == column[0])
+        if len(column) > 1:
+            self.query = self.query.filter(table.event_info == column[1])
+
+
