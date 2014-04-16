@@ -25,12 +25,15 @@ class EventQuery(object):
 
     lang_to_column = {
         'id': 'id',
+        'race' : 'race_id',
+        'session': 'session_id',
         'info': 'event_info',
         'subtype': 'event_subtype',
         'type': 'event_type',
         'place': 'place',
         'lap': 'lap',
-        'player': 'player'
+        'player': 'player',
+        'course': 'course',
     }
 
 
@@ -62,9 +65,11 @@ class EventQuery(object):
         for condition in self.parsed[1]:
             if condition[0] != 'not':
                 if condition[1] in ['by', 'where']:
-                    self.__cache_identifier(condition[2])
+                    if condition[2][0] not in ['Session', 'Race']:
+                        self.__cache_identifier(condition[2])
                 elif condition[1] not in ['with', 'on', 'per']:
-                    self.__cache_identifier(condition[3])
+                    if condition[3][0] not in ['Session', 'Race']:
+                        self.__cache_identifier(condition[3])
 
         # and the ones we need to output
         for output in self.parsed[0]:
@@ -79,6 +84,10 @@ class EventQuery(object):
         # generate an alias for each table and join on race_id
         self.__gen_aliases()
         self.__join()
+
+        self.alias_cache['Race'] = TableWrapper(m.Race)
+        self.alias_cache['Session'] = TableWrapper(m.Session)
+
         for f in self.parsed[1]:
             self.__filter(f)
         for o in self.parsed[0]:
@@ -97,6 +106,7 @@ class EventQuery(object):
 
     def __gen_aliases(self):
         for ident in self.ident_cache.keys():
+            print ident
             if len(self.alias_cache) == 0:
                 self.alias_cache[ident] = TableWrapper(m.Event)
             else:
@@ -118,13 +128,9 @@ class EventQuery(object):
         else:
             selector = output[1]
 
-        if selector[0] in ['Session', 'Race']:
-            return False
-
         table = self.alias_cache[''.join(selector)]
         self.query = self.query.order_by(table.__getattr__(out_field))
         return True
-
 
 
     def __find_filter_selector(self, cond):
@@ -198,9 +204,12 @@ class EventQuery(object):
     def __by(self, table, selector, field):
         column = self.lang_to_column[field]
         self.query = self.query.group_by(table.__getattr__(column))
-        self.query = self.query.filter(table.event_subtype == selector[0])
-        if len(selector) > 1:
-            self.query = self.query.filter(table.event_info == selector[1])
+        try:
+            self.query = self.query.filter(table.event_subtype == selector[0])
+            if len(selector) > 1:
+                self.query = self.query.filter(table.event_info == selector[1])
+        except AttributeError:
+            pass
 
 
     def __per(self, table, item_type):
@@ -239,9 +248,12 @@ class EventQuery(object):
 
 
     def __default_filter(self, table, selector, neg=False):
-        self.query = self.query.filter(table.event_subtype == selector[0])
-        if len(selector) > 1:
-            self.query = self.query.filter(table.event_info == selector[1])
+        try:
+            self.query = self.query.filter(table.event_subtype == selector[0])
+            if len(selector) > 1:
+                self.query = self.query.filter(table.event_info == selector[1])
+        except AttributeError:
+            pass
 
 
     def __output(self, o):
@@ -256,10 +268,6 @@ class EventQuery(object):
                 self.__top(tab, field, lim)
             elif func == 'bottom':
                 self.__bottom(tab, field, lim)
-            return
-
-        if o[1][0] in ['Race', 'Session']:
-            self.__output_other(o[1][0], out_field)
             return
 
         tab = self.alias_cache[''.join(o[1])]
@@ -288,30 +296,22 @@ class EventQuery(object):
 
     def __count(self, table, column, field):
         self.query = self.query.add_columns(f.count(table.__getattr__(field)))
-        self.query = self.query.filter(table.event_subtype == column[0])
-        if len(column) > 1:
-            self.query = self.query.filter(table.event_info == column[1])
+        self.__default_filter(table, column)
 
 
     def __min(self, table, column, field):
         self.query = self.query.add_columns(f.min(table.__getattr__(field)))
-        self.query = self.query.filter(table.event_subtype == column[0])
-        if len(column) > 1:
-            self.query = self.query.filter(table.event_info == column[1])
+        self.__default_filter(table, column)
 
 
     def __max(self, table, column, field):
         self.query = self.query.add_columns(f.max(table.__getattr__(field)))
-        self.query = self.query.filter(table.event_subtype == column[0])
-        if len(column) > 1:
-            self.query = self.query.filter(table.event_info == column[1])
+        self.__default_filter(table, column)
 
 
     def __average(self, table, column, field):
         self.query = self.query.add_columns(f.avg(table.__getattr__(field)))
-        self.query = self.query.filter(table.event_subtype == column[0])
-        if len(column) > 1:
-            self.query = self.query.filter(table.event_info == column[1])
+        self.__default_filter(table, column)
 
 
     def __percent(self, table, column, field):
@@ -321,15 +321,6 @@ class EventQuery(object):
 
     def __default_output(self, table, column, field):
         self.query = self.query.add_columns(table.__getattr__(field))
-        self.query = self.query.filter(table.event_subtype == column[0])
-
-        if len(column) > 1:
-            self.query = self.query.filter(table.event_info == column[1])
-
-    def __output_other(self, table, field):
-        if table == 'Race':
-            self.query = self.query.add_columns(m.Race.__getattribute__(m.Race, field))
-        elif table == 'Session':
-            self.query = self.query.add_columns(m.Session.__getattribute__(m.Session, field))
+        self.__default_filter(table, column)
 
 

@@ -281,9 +281,9 @@ class QueryAPI(Resource):
         if 'query' not in query:
             abort(400, message="Require query")
 
-        eq = EventQuery(query['query'], query.get(user, None))
+        eq = EventQuery(query['query'], query.get('user', None))
         ret = {
-            'query': query['body'],
+            'query': query['query'],
             'results': eq.query.all()
         }
         return ret
