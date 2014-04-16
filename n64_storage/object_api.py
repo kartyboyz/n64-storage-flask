@@ -192,6 +192,7 @@ class EventAPI(Resource):
         'id'             : fields.Integer,
         'race_id'        : fields.Integer,
         'player'         : fields.Integer,
+        'place'          : fields.Integer,
         'lap'            : fields.Integer,
         'timestamp'      : fields.Fixed(1),
         'image_url'      : fields.String,
@@ -216,7 +217,7 @@ class EventListAPI(Resource):
 
     required_fields = ['timestamp', 'event_type', 'event_subtype']
     optional_fields = ['player', 'lap', 'image_url', 'event_info',
-            'linked_event_id']
+            'linked_event_id', 'place']
 
     def get(self, race_id):
         race = Race.query.get_or_404(race_id)
