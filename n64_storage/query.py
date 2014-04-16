@@ -34,12 +34,13 @@ class EventQuery(object):
     }
 
 
-    def __init__(self, query_str):
+    def __init__(self, query_str, user=None):
         self.query_str = query_str
         self.ident_cache = dict()
         self.alias_cache = dict()
         self.query = None
         self.ordered = False
+        self.user = user
         self.parse()
         self.gen_query()
 
@@ -54,6 +55,8 @@ class EventQuery(object):
         self.query = self.query.join(m.Race)
         self.query = self.query.join(m.Session)
         self.query = self.query.distinct()
+        if self.user:
+            self.query = self.query.filter(m.Session.owner == self.user)
 
         # Get a list of all the tables we need to filter by
         for condition in self.parsed[1]:
