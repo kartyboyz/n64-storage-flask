@@ -92,6 +92,7 @@ class RaceAPI(Resource):
         'session_id': fields.Integer,
         'race_number': fields.Integer,
         'video_url': fields.String,
+        'video_processed_url': fields.String,
         'start_time' : fields.Integer,
         'duration' : fields.Integer,
         'characters': fields.List(fields.String),
