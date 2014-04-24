@@ -12,8 +12,6 @@ from . import video_api
 
 from .query import EventQuery
 
-import os
-
 
 class SessionAPI(Resource):
 
@@ -312,12 +310,9 @@ def configure_resources(api):
     api.add_resource(QueryAPI, '/query')
 
 def connect_sqs(app):
-    access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-    secret_key = os.getenv('AWS_SECRET_KEY')
-    app.sqs_connection = sqs.connect_to_region('us-east-1',
-            aws_secret_access_key=secret_key,
-            aws_access_key_id=access_key_id)
+    app.sqs_connection = sqs.connect_to_region('us-east-1')
     app.session_queue = app.sqs_connection.get_queue('split-queue')
     app.session_queue.set_timeout(60*15)
     app.race_queue = app.sqs_connection.get_queue('process-queue')
+    app.race_queue.set_timeout(60*15)
 

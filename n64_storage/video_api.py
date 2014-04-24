@@ -46,11 +46,7 @@ def submit_transcode_job(obj):
         'Key': name,
         'PresetId': '1351620000001-100070'
     }]
-    aws_key = os.getenv('AWS_ACCESS_KEY_ID')
-    aws_secret = os.getenv('AWS_SECRET_KEY')
-    et = elastictranscoder.connect_to_region('us-east-1',
-            aws_secret_access_key=aws_secret,
-            aws_access_key_id=aws_key)
+    et = elastictranscoder.connect_to_region('us-east-1')
 
     bucket = 'race-videos' if isinstance(obj, Race) else 'session-videos'
     processed_url = 'https://s3.amazonaws.com/%s/encoded/%s' % (bucket, name)
