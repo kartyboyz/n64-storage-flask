@@ -30,5 +30,4 @@ def configure():
     if app.config['SEND_MESSAGES']:
         object_api.connect_sqs(app)
 
-    video_api.configure_resources(api)
 

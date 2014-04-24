@@ -5,6 +5,9 @@ class Config(object):
     TESTING = False
     SEND_MESSAGES = False
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    RACE_PIPELINE = '1398306135448-eqvam9'
+    SESS_PIPELINE = '1395885064713-5fx6l1'
+    TRANSCODE = False
 
 
 class DevelopmentConfig(Config):
@@ -21,3 +24,4 @@ class AWSConfig(Config):
     DEBUG = True
     SEND_MESSAGES = True
     SQLALCHEMY_DATABASE_URI = 'postgresql://kartyboyz:kartzarecool@n64-database.cjkhmjv2ca1f.us-east-1.rds.amazonaws.com/n64data'
+    TRANSCODE = True

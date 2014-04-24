@@ -1,12 +1,13 @@
 
-from flask import Flask
-from flask import request
-from flask.ext.restful import Api, Resource, marshal, fields, abort
-
-from .models import Session, Race, db
 
 from subprocess import call
-import hashlib, tempfile, urllib2, os
+
+from boto import elastictranscoder
+
+from .models import Race, Session
+from . import app
+
+import os
 
 def split_video(src, dst, start, end):
     command = ['ffmpeg', '-i', src,
@@ -14,62 +15,55 @@ def split_video(src, dst, start, end):
             '-ss', str(start), '-t', str(end), dst ]
     call(command)
 
-class VideoSplitAPI(Resource):
+def submit_transcode_job(obj):
+    if len(obj.video_url) > 12:
+        s3_url = obj.video_url
+    else:
+        return False
+    try:
+        full_name = s3_url.split('.com/')[-1]
+        name = '/'.join(full_name.split('/')[1:])
+        name = name.split('.')[0] + '.mp4'
+    except IndexError:
+        return False
 
-    server_folder = '/home/michael/vid_test/races/{}/'
-    server = 'http://192.168.98.180:8888/races/{}/{}.{}'
+    print name, full_name
 
-    def post(self, session_id):
-        session = Session.query.get_or_404(session_id)
+    if isinstance(obj, Race):
+        pipeline = app.config['RACE_PIPELINE']
+    elif isinstance(obj, Session):
+        pipeline = app.config['SESS_PIPELINE']
+    else:
+        return False
 
-        vid = self.download_race(session)
-        ext = session.video_url.split('.')[-1]
+    print pipeline
 
-        for race in session.races:
-            newfile = self.split_race(vid, race, ext)
-            race.video_url = VideoSplitAPI.server.format(session_id, race.id, ext)
-            race.video_split = True
-            db.session.add(race)
-        session.video_split = True
-        db.session.add(session)
-        db.session.commit()
+    prefix = 'encoded/'
+    inputs = {
+        'Key': full_name,
+    }
+    outputs = [{
+        'Key': name,
+        'PresetId': '1351620000001-100070'
+    }]
+    aws_key = os.getenv('AWS_ACCESS_KEY_ID')
+    aws_secret = os.getenv('AWS_SECRET_KEY')
+    et = elastictranscoder.connect_to_region('us-east-1',
+            aws_secret_access_key=aws_secret,
+            aws_access_key_id=aws_key)
 
-        return {'message':'Video Split Successful'}
+    bucket = 'race-videos' if isinstance(obj, Race) else 'session-videos'
+    processed_url = 'https://s3.amazonaws.com/%s/encoded/%s' % (bucket, name)
 
-
-    def download_race(self, session):
-
-        f = tempfile.NamedTemporaryFile()
-        chunk_size = 4 * 1024 * 1024
+    if app.config['TRANSCODE']:
         try:
-            req = urllib2.urlopen(session.video_url)
-            while True:
-                chunk = req.read(chunk_size)
-                if not chunk: break
-                f.write(chunk)
-            f.flush()
-            return f
+            et.create_job(pipeline, input_name=inputs,
+                    outputs=outputs, output_key_prefix=prefix)
+            obj.video_processed_url = processed_url
+        except:
+            return False
 
-        except urllib2.HTTPError:
-            print "Couldn't download ", session
-            return None
-        except urllib2.URLError:
-            print "Couldn't download ", session
-            return None
+    return True
+    
 
-
-    def split_race(self, video, race, ext):
-        try:
-            os.mkdir(VideoSplitAPI.server_folder.format(race.session_id))
-        except OSError as e:
-            if e.errno != 17:
-                raise e
-
-        dest = VideoSplitAPI.server_folder.format(race.session_id) + '/{}.{}'
-        dest = dest.format(race.id, ext)
-        split_video(video.name, dest, race.start_time, race.duration)
-        return dest
-
-def configure_resources(api):
-    api.add_resource(VideoSplitAPI, '/sessions/<int:session_id>/split_races')
 
