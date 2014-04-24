@@ -1,7 +1,6 @@
 
-from flask import Flask
 from flask import request
-from flask.ext.restful import Api, Resource, marshal, fields, abort
+from flask.ext.restful import Resource, marshal, fields, abort
 
 from boto import sqs
 from boto.sqs.message import Message
@@ -9,11 +8,11 @@ import json
 
 from .models import Session, Race, Event, db
 from . import app
+from . import video_api
 
 from .query import EventQuery
 
 import os
-import pdb
 
 
 class SessionAPI(Resource):
@@ -178,6 +177,8 @@ class RaceListAPI(Resource):
                 race.__setattr__(item, data[item])
 
         race.race_number = race_number
+
+        video_api.submit_transcode_job(race)
 
         db.session.add(race)
         db.session.commit()
