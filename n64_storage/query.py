@@ -367,14 +367,14 @@ class EventQuery(object):
 
 
     def __top(self, count, table, column, field):
-        self.query = self.query.order_by(table.__getattr__(field).desc())
+        self.query = self.query.order_by(cast(table.__getattr__(field), m.db.Float))
         self.after_query.append(lambda:self.query.limit(count))
         self.ordered = True
         self.__default_output(table, column, field)
 
 
     def __bottom(self, count, table, column, field):
-        self.query = self.query.order_by(table.__getattr__(field))
+        self.query = self.query.order_by(cast(table.__getattr__(field), m.db.Float).desc())
         self.after_query.append(lambda:self.query.limit(count))
         self.ordered = True
         self.__default_output(table, column, field)
