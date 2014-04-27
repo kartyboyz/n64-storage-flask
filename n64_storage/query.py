@@ -2,10 +2,12 @@
 #import sqlalchemy as sql
 from sqlalchemy.orm import aliased
 from sqlalchemy import cast
-from . import models as m
+
+from collections import OrderedDict
 
 from sqlalchemy import func as f
 
+from . import models as m
 from . import parser
 from .parser import query_parser
 
@@ -25,6 +27,8 @@ class LanguageDescription(object):
         for inf in self.selectors.keys():
             if len(self.selectors[inf]) == 0:
                 del self.selectors[inf]
+
+        self.selectors['Time'] = []
 
         self.players = parser.players
         self.courses = parser.courses
@@ -93,8 +97,8 @@ class EventQuery(object):
 
     def __init__(self, query_str, user=None):
         self.query_str = query_str
-        self.ident_cache = dict()
-        self.alias_cache = dict()
+        self.ident_cache = list()
+        self.alias_cache = OrderedDict()
         self.after_query = list()
         self.column_names = list()
         self.column_types = list()
@@ -110,13 +114,6 @@ class EventQuery(object):
 
 
     def gen_query(self):
-        self.query = m.db.session.query()
-        self.query = self.query.select_from(m.Event)
-        self.query = self.query.join(m.Race)
-        self.query = self.query.join(m.Session)
-        self.query = self.query.distinct()
-        if self.user:
-            self.query = self.query.filter(m.Session.owner == self.user)
 
         # Get a list of all the tables we need to filter by
         if len(self.parsed) > 1:
@@ -140,10 +137,23 @@ class EventQuery(object):
 
         # generate an alias for each table and join on race_id
         self.__gen_aliases()
+
+        self.alias_cache['Race'] = TableWrapper(m.Race)
+        self.alias_cache['Session'] = TableWrapper(m.Session)
+
+        table = self.alias_cache.values()[0]
+
+        self.query = m.db.session.query()
+        self.query = self.query.select_from(table)
+        self.query = self.query.join(m.Race, table.race_id==m.Race.id)
+        self.query = self.query.join(m.Session)
+        self.query = self.query.distinct()
+
+        if self.user:
+            self.query = self.query.filter(m.Session.owner == self.user)
+
         self.__join()
 
-        self.alias_cache['Race'] = m.Race
-        self.alias_cache['Session'] = m.Session
 
         if len(self.parsed) > 1:
             for fi in self.parsed[1]:
@@ -161,21 +171,21 @@ class EventQuery(object):
 
     def __cache_identifier(self, ident):
         idhash = ''.join(ident.asList())
-        self.ident_cache[idhash] = ident.asList()
+        self.ident_cache.append(idhash)
 
 
     def __gen_aliases(self):
-        for ident in self.ident_cache.keys():
-            if len(self.alias_cache) == 0:
-                self.alias_cache[ident] = m.Event
+        for ident in self.ident_cache:
+            if ident == 'Time':
+                self.alias_cache[ident] = aliased(m.LaptimeEvent)
             else:
                 self.alias_cache[ident] = aliased(m.Event)
 
 
     def __join(self):
-        if len(self.alias_cache.values()) > 0:
+        if len(self.alias_cache.values()) > 2:
             base = self.alias_cache.values()[0]
-            for table in self.alias_cache.values()[1:]:
+            for table in self.alias_cache.values()[1:-2]:
                 self.query = self.query.join(table, base.race_id==table.race_id)
 
 
