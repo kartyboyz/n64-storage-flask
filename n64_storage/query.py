@@ -1,11 +1,12 @@
 
 #import sqlalchemy as sql
 from sqlalchemy.orm import aliased
+from sqlalchemy import cast
 from . import models as m
 
 from sqlalchemy import func as f
 
-#from . import parser
+from . import parser
 from .parser import query_parser
 
 import logging
@@ -21,6 +22,65 @@ class TableWrapper(object):
         return self.cls.__getattribute__(self.cls, attr)
 
 
+class LanguageDescription(object):
+
+    def __init__(self):
+        self.fields = parser.event_fields
+        self.event_types = parser.event_types + parser.event_subtypes
+        self.selectors = {t:self.__get_event_infos(t) for t in self.event_types}
+
+        # clear out empty selectors
+        for inf in self.selectors.keys():
+            if len(self.selectors[inf]) == 0:
+                del self.selectors[inf]
+
+        self.players = parser.players
+        self.courses = parser.courses
+        self.selector = ['types', 'infos']
+        self.outputs = {
+            'count':  ['selector', '?fields'],
+            'average': ['selector', '?fields'],
+            'min': ['selector', '?field'],
+            'max': ['selector', '?field'],
+            #'top': ['int', 'selector', '?field'],
+            #'bottom': ['int', 'selector', '?field'],
+            'out': ['selector', '?field']
+        }
+        self.filters = {
+            'on': ['courses'],
+            'with': ['characters'],
+            'by': ['selector', '?field'],
+            'less': ['int', 'selector'],
+            'more': ['int', 'selector'],
+            'lap': ['int', 'selector'],
+            'place': ['int', 'selector'],
+            'where': ['selector']
+        }
+
+    def __get_event_infos(self, et):
+        q = m.db.session.query()\
+                .select_from(m.Event)\
+                .add_columns(m.Event.event_info)\
+                .distinct()
+        q = q.filter((cast(m.Event.event_type, m.db.String) == et)
+                | (m.Event.event_subtype == et))
+
+        return [i[0] for i in q.all() if len(i[0]) > 0]
+
+    def to_dict(self):
+        d = {
+            'outputs': self.outputs,
+            'filters': self.filters,
+
+            'selectors': self.selectors,
+
+            'fields': self.fields,
+            'characters': self.players,
+            'courses': self.courses,
+        }
+        return d
+
+
 class EventQuery(object):
 
     lang_to_column = {
@@ -34,6 +94,7 @@ class EventQuery(object):
         'lap': 'lap',
         'player': 'player',
         'course': 'course',
+        'time': 'timestamp',
     }
 
 
@@ -62,14 +123,15 @@ class EventQuery(object):
             self.query = self.query.filter(m.Session.owner == self.user)
 
         # Get a list of all the tables we need to filter by
-        for condition in self.parsed[1]:
-            if condition[0] != 'not':
-                if condition[1] in ['by', 'where']:
-                    if condition[2][0] not in ['Session', 'Race']:
-                        self.__cache_identifier(condition[2])
-                elif condition[1] not in ['with', 'on', 'per']:
-                    if condition[3][0] not in ['Session', 'Race']:
-                        self.__cache_identifier(condition[3])
+        if len(self.parsed) > 1:
+            for condition in self.parsed[1]:
+                if condition[0] != 'not':
+                    if condition[1] in ['by', 'where']:
+                        if condition[2][0] not in ['Session', 'Race']:
+                            self.__cache_identifier(condition[2])
+                    elif condition[1] not in ['with', 'on', 'per']:
+                        if condition[3][0] not in ['Session', 'Race']:
+                            self.__cache_identifier(condition[3])
 
         # and the ones we need to output
         for output in self.parsed[0]:
@@ -88,8 +150,9 @@ class EventQuery(object):
         self.alias_cache['Race'] = TableWrapper(m.Race)
         self.alias_cache['Session'] = TableWrapper(m.Session)
 
-        for f in self.parsed[1]:
-            self.__filter(f)
+        if len(self.parsed) > 1:
+            for f in self.parsed[1]:
+                self.__filter(f)
         for o in self.parsed[0]:
             self.__output(o)
 
@@ -194,12 +257,12 @@ class EventQuery(object):
 
     def __place(self, table, place, selector, neg=False):
         self.query = self.query.filter(table.place == place)
-        self.__default_query(table, selector)
+        self.__default_query(table, selector, neg)
 
 
     def __lap(self, tab, lap, selector, neg=False):
         self.query = self.query.filter(tab.lap == lap)
-        self.__default_query(table, selector)
+        self.__default_query(table, selector, neg)
 
 
     def __by(self, table, selector, field):
@@ -250,9 +313,13 @@ class EventQuery(object):
 
     def __default_filter(self, table, selector, neg=False):
         try:
-            self.query = self.query.filter(table.event_subtype == selector[0])
-            if len(selector) > 1:
-                self.query = self.query.filter(table.event_info == selector[1])
+            if not neg:
+                if selector[0] in parser.event_subtypes:
+                    self.query = self.query.filter(table.event_subtype == selector[0])
+                else:
+                    self.query = self.query.filter(table.event_type == selector[0])
+                if len(selector) > 1:
+                    self.query = self.query.filter(table.event_info == selector[1])
         except AttributeError:
             pass
 
@@ -277,6 +344,10 @@ class EventQuery(object):
             self.__count(tab, o[1], out_field)
         elif func == 'average':
             self.__average(tab, o[1], out_field)
+        elif func == 'min':
+            self.__min(tab, o[1], out_field)
+        elif func == 'max':
+            self.__max(tab, o[1], out_field)
         elif func == 'percent':
             self.__percent(tab, o[1], out_field)
         else:

@@ -6,7 +6,7 @@ from pyparsing import alphanums, nums
 
 event_types = ['Lap', 'Item', 'Collision', 'Pass', 'Shortcut', 'Tag', 'Fall', 'Reverse']
 event_subtypes = ['Race', 'Session', 'Get', 'Use', 'Steal', 'Stolen', 'Passing', 'Passed', 'Start', 'Lap', 'Finish', 'Shortcut', 'Watch', 'Tag', 'Banana', 'Spin', 'Crash']
-event_fields = ['id', 'lap', 'info', 'subtype', 'type', 'place', 'player', 'race', 'session', 'course']
+event_fields = ['id', 'lap', 'info', 'subtype', 'type', 'place', 'player', 'race', 'session', 'course', 'time']
 race_fields = ['course', 'characters']
 
 booleans = ['and', 'not']
@@ -27,7 +27,7 @@ event_type_spec = oneOf(event_types, caseless=True)
 event_subtype_spec = oneOf(event_subtypes, caseless=True)
 info_spec = Word(alphanums)
 
-subtype_spec = Group(event_subtype_spec + Optional(Suppress('.') + info_spec))
+subtype_spec = Group((event_type_spec | event_subtype_spec) + Optional(Suppress('.') + info_spec))
 event_spec = Group(event_type_spec + Suppress('.') + Optional(subtype_spec))
 
 
@@ -72,6 +72,6 @@ neg_cond_spec = Group(Optional(boolean_spec, default='and') + cond_spec)
 
 condition_statement = delimitedList(neg_cond_spec)
 
-query_spec = Group(selection_statement) + Suppress(':') + Group(condition_statement)
+query_spec = Group(selection_statement) + Optional(Suppress(':') + Group(condition_statement))
 
 query_parser = query_spec

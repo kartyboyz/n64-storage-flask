@@ -10,7 +10,7 @@ from .models import Session, Race, Event, db
 from . import app
 from . import video_api
 
-from .query import EventQuery
+from .query import EventQuery, LanguageDescription
 
 
 class SessionAPI(Resource):
@@ -297,6 +297,12 @@ class QueryAPI(Resource):
         return ret
 
 
+class QueryInfoAPI(Resource):
+    def get(self):
+        info = LanguageDescription()
+        return info.to_dict()
+
+
 def configure_resources(api):
     api.add_resource(SessionListAPI, '/sessions')
     api.add_resource(SessionAPI, '/sessions/<int:session_id>')
@@ -308,6 +314,7 @@ def configure_resources(api):
     api.add_resource(UserSessionListApi, '/users/<user>/sessions')
     api.add_resource(UserRaceListApi, '/users/<user>/races')
     api.add_resource(QueryAPI, '/query')
+    api.add_resource(QueryInfoAPI, '/query/info')
 
 def connect_sqs(app):
     app.sqs_connection = sqs.connect_to_region('us-east-1')
