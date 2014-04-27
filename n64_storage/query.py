@@ -61,6 +61,7 @@ class LanguageDescription(object):
         q = m.db.session.query()\
                 .select_from(m.Event)\
                 .add_columns(m.Event.event_info)\
+                .order_by(m.Event.event_info)\
                 .distinct()
         q = q.filter((cast(m.Event.event_type, m.db.String) == et)
                 | (m.Event.event_subtype == et))
