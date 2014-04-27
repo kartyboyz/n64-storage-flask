@@ -96,4 +96,6 @@ laptime = db.Table('laptime', db.metadata)
 for c in db.metadata.tables['event'].columns: laptime.append_column(c.copy())
 class LaptimeEvent(db.Model):
     __table__ = laptime
+    race = db.relationship('Race', primaryjoin="Race.id == foreign(LaptimeEvent.race_id)", backref="laptimes")
+    #linked_event = db.relationship('Event', backref=db.backref('linked_from', remote_side=id))
 
