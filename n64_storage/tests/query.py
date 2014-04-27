@@ -1,5 +1,6 @@
 import pyparsing
-from .. import query as q
+from .. import parser as p
+#from .. import query as q
 import unittest
 
 
@@ -28,7 +29,7 @@ class ParserTestCase(unittest.TestCase):
             'asdfasdf',
             'Lap.3, meow'
         ]
-        self._do_parse_test(q.subtype_spec, good, bad)
+        self._do_parse_test(p.subtype_spec, good, bad)
 
     def test_field_spec(self):
         good = [
@@ -48,36 +49,36 @@ class ParserTestCase(unittest.TestCase):
             'top -5 Use',
             'asdfasdf'
         ]
-        self._do_parse_test(q.field_spec, good, bad)
+        self._do_parse_test(p.field_spec, good, bad)
 
     def test_condition_statement(self):
         good = [
-            'or on KoopaTroopaBeach',
+            'on KoopaTroopaBeach',
             'and with Bowser',
-            'by place',
+            'by Finish',
             'not shortcut',
             'more than 5 item.get'
         ]
         bad = [
-            'or not on KoopaTroopaBeach',
-            'and with KingBoo',
-            'by time',
+            'asdfasdf',
+            'by player',
             'more than 5 lap.lap.lap.lap'
         ]
-        self._do_parse_test(q.neg_cond_spec, good, bad)
+        self._do_parse_test(p.neg_cond_spec, good, bad)
 
     def test_condition_list(self):
         good = [
-            'by place, (not shortcut, lap.3)',
-            'by place,not (shortcut, lap.3)',
-            'by place, (shortcut, (not lap.3))'
+            'by Finish, not lap 3 shortcut',
+            'by Finish, on KoopaTroopaBeach',
+            'by Finish, more than 6 Item'
         ]
         bad = [
             'by place, (not shortcut'
             'adsf',
             'place'
         ]
-        self._do_parse_test(q.condition_statement, good, bad)
+        self._do_parse_test(p.condition_statement, good, bad)
 
-    def test_query(self):
-        pass
+
+        
+    
