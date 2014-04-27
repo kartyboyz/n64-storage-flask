@@ -207,7 +207,7 @@ class EventQuery(object):
             selector = output[1]
 
         table = self.alias_cache[''.join(selector)]
-        self.query = self.query.order_by(table.__getattr__(out_field))
+        self.query = self.query.order_by(self.__get_field(table, out_field))
         return True
 
 
@@ -290,7 +290,7 @@ class EventQuery(object):
 
     def __by(self, table, selector, field):
         column = self.lang_to_column[field]
-        self.query = self.query.group_by(table.__getattr__(column))
+        self.query = self.query.group_by(self.__get_field(table, column))
         self.query = self.__match_selector(self.query, table, selector)
 
 
@@ -366,42 +366,49 @@ class EventQuery(object):
             self.__default_output(table, o[1], out_field)
 
 
+    def __get_field(self, table, field):
+        if field == 'player':
+            return m.Race.characters[table.__getattr__(field)]
+        else:
+            return table.__getattr__(field)
+
+
     def __top(self, count, table, column, field):
-        self.query = self.query.order_by(cast(table.__getattr__(field), m.db.Float))
+        self.query = self.query.order_by(cast(self.__get_field(table, field), m.db.Float))
         self.after_query.append(lambda:self.query.limit(count))
         self.ordered = True
         self.__default_output(table, column, field)
 
 
     def __bottom(self, count, table, column, field):
-        self.query = self.query.order_by(cast(table.__getattr__(field), m.db.Float).desc())
+        self.query = self.query.order_by(cast(self.__get_field(table, field), m.db.Float).desc())
         self.after_query.append(lambda:self.query.limit(count))
         self.ordered = True
         self.__default_output(table, column, field)
 
 
     def __count(self, table, column, field):
-        self.query = self.query.add_columns(f.count(table.__getattr__(field)))
+        self.query = self.query.add_columns(self.__get_field(table, field))
         self.__default_filter(table, column)
 
 
     def __min(self, table, column, field):
-        self.query = self.query.add_columns(f.min(table.__getattr__(field)))
+        self.query = self.query.add_columns(f.min(self.__get_field(table, field)))
         self.__default_filter(table, column)
 
 
     def __max(self, table, column, field):
-        self.query = self.query.add_columns(f.max(table.__getattr__(field)))
+        self.query = self.query.add_columns(f.max(self.__get_field(table, field)))
         self.__default_filter(table, column)
 
 
     def __average(self, table, column, field):
-        self.query = self.query.add_columns(f.avg(table.__getattr__(field)))
+        self.query = self.query.add_columns(f.avg(self.__get_field(table, field)))
         self.__default_filter(table, column)
 
 
     def __default_output(self, table, column, field):
-        self.query = self.query.add_columns(table.__getattr__(field))
+        self.query = self.query.add_columns(self.__get_field(table, field))
         self.__default_filter(table, column)
 
 
