@@ -16,6 +16,14 @@ logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
+class TableWrapper(object):
+    def __init__(self, cls):
+        self.cls = cls
+
+    def __getattr__(self, attr):
+        return self.cls.__getattribute__(self.cls, attr)
+
+
 class LanguageDescription(object):
 
     def __init__(self):
@@ -199,7 +207,7 @@ class EventQuery(object):
             selector = output[1]
 
         table = self.alias_cache[''.join(selector)]
-        self.query = self.query.order_by(table.c[out_field])
+        self.query = self.query.order_by(table.__getattr__(out_field))
         return True
 
 
@@ -282,7 +290,7 @@ class EventQuery(object):
 
     def __by(self, table, selector, field):
         column = self.lang_to_column[field]
-        self.query = self.query.group_by(table.c[column])
+        self.query = self.query.group_by(table.__getattr__(column))
         self.query = self.__match_selector(self.query, table, selector)
 
 
@@ -359,41 +367,41 @@ class EventQuery(object):
 
 
     def __top(self, count, table, column, field):
-        self.query = self.query.order_by(table.c[field].desc())
+        self.query = self.query.order_by(table.__getattr__(field).desc())
         self.after_query.append(lambda:self.query.limit(count))
         self.ordered = True
         self.__default_output(table, column, field)
 
 
     def __bottom(self, count, table, column, field):
-        self.query = self.query.order_by(table.c[field])
+        self.query = self.query.order_by(table.__getattr__(field))
         self.after_query.append(lambda:self.query.limit(count))
         self.ordered = True
         self.__default_output(table, column, field)
 
 
     def __count(self, table, column, field):
-        self.query = self.query.add_columns(f.count(table.c[field]))
+        self.query = self.query.add_columns(f.count(table.__getattr__(field)))
         self.__default_filter(table, column)
 
 
     def __min(self, table, column, field):
-        self.query = self.query.add_columns(f.min(table.c[field]))
+        self.query = self.query.add_columns(f.min(table.__getattr__(field)))
         self.__default_filter(table, column)
 
 
     def __max(self, table, column, field):
-        self.query = self.query.add_columns(f.max(table.c[field]))
+        self.query = self.query.add_columns(f.max(table.__getattr__(field)))
         self.__default_filter(table, column)
 
 
     def __average(self, table, column, field):
-        self.query = self.query.add_columns(f.avg(table.c[field]))
+        self.query = self.query.add_columns(f.avg(table.__getattr__(field)))
         self.__default_filter(table, column)
 
 
     def __default_output(self, table, column, field):
-        self.query = self.query.add_columns(table.c[field])
+        self.query = self.query.add_columns(table.__getattr__(field))
         self.__default_filter(table, column)
 
 
