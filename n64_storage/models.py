@@ -91,3 +91,9 @@ class Event(db.Model):
     def __init__(self, race):
         self.race = race
 
+
+laptime = db.Table('laptime', db.metadata)
+for c in db.metadata.tables['event'].columns: laptime.append_column(c.copy())
+class LaptimeEvent(db.Model):
+    __table__ = laptime
+
