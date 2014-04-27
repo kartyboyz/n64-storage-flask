@@ -14,14 +14,6 @@ logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
-class TableWrapper(object):
-    def __init__(self, cls):
-        self.cls = cls
-
-    def __getattr__(self, attr):
-        return self.cls.__getattribute__(self.cls, attr)
-
-
 class LanguageDescription(object):
 
     def __init__(self):
@@ -150,8 +142,8 @@ class EventQuery(object):
         self.__gen_aliases()
         self.__join()
 
-        self.alias_cache['Race'] = TableWrapper(m.Race)
-        self.alias_cache['Session'] = TableWrapper(m.Session)
+        self.alias_cache['Race'] = m.Race
+        self.alias_cache['Session'] = m.Session
 
         if len(self.parsed) > 1:
             for fi in self.parsed[1]:
@@ -175,7 +167,7 @@ class EventQuery(object):
     def __gen_aliases(self):
         for ident in self.ident_cache.keys():
             if len(self.alias_cache) == 0:
-                self.alias_cache[ident] = TableWrapper(m.Event)
+                self.alias_cache[ident] = m.Event
             else:
                 self.alias_cache[ident] = aliased(m.Event)
 
@@ -197,7 +189,7 @@ class EventQuery(object):
             selector = output[1]
 
         table = self.alias_cache[''.join(selector)]
-        self.query = self.query.order_by(table.__getattr__(out_field))
+        self.query = self.query.order_by(table.c[out_field])
         return True
 
 
@@ -280,7 +272,7 @@ class EventQuery(object):
 
     def __by(self, table, selector, field):
         column = self.lang_to_column[field]
-        self.query = self.query.group_by(table.__getattr__(column))
+        self.query = self.query.group_by(table.c[column])
         self.query = self.__match_selector(self.query, table, selector)
 
 
@@ -296,8 +288,6 @@ class EventQuery(object):
 
     def __count_query(self, table, selector):
         event = aliased(m.Event)
-        if isinstance(table, TableWrapper):
-            table = table.cls
         sub = m.db.session.query().select_from(event)\
                 .filter(event.race_id == table.race_id)\
                 .add_column(f.count(event.id).label('ev_count'))\
@@ -359,41 +349,41 @@ class EventQuery(object):
 
 
     def __top(self, count, table, column, field):
-        self.query = self.query.order_by(table.__getattr__(field).desc())
+        self.query = self.query.order_by(table.c[field].desc())
         self.after_query.append(lambda:self.query.limit(count))
         self.ordered = True
         self.__default_output(table, column, field)
 
 
     def __bottom(self, count, table, column, field):
-        self.query = self.query.order_by(table.__getattr__(field))
+        self.query = self.query.order_by(table.c[field])
         self.after_query.append(lambda:self.query.limit(count))
         self.ordered = True
         self.__default_output(table, column, field)
 
 
     def __count(self, table, column, field):
-        self.query = self.query.add_columns(f.count(table.__getattr__(field)))
+        self.query = self.query.add_columns(f.count(table.c[field]))
         self.__default_filter(table, column)
 
 
     def __min(self, table, column, field):
-        self.query = self.query.add_columns(f.min(table.__getattr__(field)))
+        self.query = self.query.add_columns(f.min(table.c[field]))
         self.__default_filter(table, column)
 
 
     def __max(self, table, column, field):
-        self.query = self.query.add_columns(f.max(table.__getattr__(field)))
+        self.query = self.query.add_columns(f.max(table.c[field]))
         self.__default_filter(table, column)
 
 
     def __average(self, table, column, field):
-        self.query = self.query.add_columns(f.avg(table.__getattr__(field)))
+        self.query = self.query.add_columns(f.avg(table.c[field]))
         self.__default_filter(table, column)
 
 
     def __default_output(self, table, column, field):
-        self.query = self.query.add_columns(table.__getattr__(field))
+        self.query = self.query.add_columns(table.c[field])
         self.__default_filter(table, column)
 
 
