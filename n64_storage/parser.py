@@ -1,11 +1,11 @@
 
 from pyparsing import oneOf, Word, Suppress
 from pyparsing import CaselessKeyword
-from pyparsing import Forward, Group, delimitedList, Optional
+from pyparsing import Group, delimitedList, Optional
 from pyparsing import alphanums, nums
 
 event_types = ['Lap', 'Item', 'Collision', 'Pass', 'Shortcut', 'Tag', 'Fall', 'Reverse']
-event_subtypes = ['Race', 'Session', 'Get', 'Use', 'Steal', 'Stolen', 'Passing', 'Passed', 'Start', 'Lap', 'Finish', 'Shortcut', 'Watch', 'Tag', 'Banana', 'Spin', 'Crash']
+event_subtypes = ['Race', 'Session', 'Get', 'Use', 'Steal', 'Stolen', 'Passing', 'Passed', 'Start', 'New', 'Finish', 'Shortcut', 'Watch', 'Tag', 'Banana', 'Spin', 'Crash']
 event_fields = ['id', 'lap', 'info', 'subtype', 'type', 'place', 'player', 'race', 'session', 'course', 'time']
 race_fields = ['course', 'characters']
 
@@ -20,7 +20,6 @@ items = ['Banana', 'BananaBunch', 'Boo', 'FakeItemBox', 'GreenShell', 'TripleGre
 courses = ['LuigiCircuit', 'MooMooFarm', 'KoopaTroopaBeach', 'KalimariDesert', 'ToadsTurnpike',
            'FrappeSnowland', 'ChocoMountain', 'MarioRaceway', 'WarioStadium', 'SherbertLand',
            'RoyalRaceway', 'BowsersCastle', 'DKsJungleParkway', 'BansheeBoardwalk', 'RainbowRoad']
-
 
 
 event_type_spec = oneOf(event_types, caseless=True)
@@ -63,8 +62,6 @@ place_spec = CaselessKeyword('place') + Word(nums) + subtype_spec
 default_cond_spec = Optional(CaselessKeyword('where'), default='where') + subtype_spec
 
 
-#condition_statement = Forward()
-
 cond_spec = on_spec | with_spec | by_spec | per_spec | less_spec | more_spec \
         | lap_spec | place_spec | default_cond_spec
 
@@ -75,3 +72,4 @@ condition_statement = delimitedList(neg_cond_spec)
 query_spec = Group(selection_statement) + Optional(Suppress(':') + Group(condition_statement))
 
 query_parser = query_spec
+
