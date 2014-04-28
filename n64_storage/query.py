@@ -3,6 +3,7 @@
 from sqlalchemy.orm import aliased
 from sqlalchemy import cast
 
+import collections
 from collections import OrderedDict
 
 from sqlalchemy import func as f
@@ -14,6 +15,14 @@ from .parser import query_parser
 #import logging
 #logging.basicConfig()
 #logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Iterable) and not isinstance(el, basestring):
+            for sub in flatten(el):
+                yield sub
+        else:
+            yield el
 
 
 class TableWrapper(object):
@@ -126,22 +135,15 @@ class EventQuery(object):
         # Get a list of all the tables we need to filter by
         if len(self.parsed) > 1:
             for condition in self.parsed[1]:
-                if condition[1] in ['by', 'where']:
-                    if condition[2][0] not in ['Session', 'Race']:
-                        self.__cache_identifier(condition[2])
-                elif condition[1] not in ['with', 'on', 'per']:
-                    if condition[3][0] not in ['Session', 'Race']:
-                        self.__cache_identifier(condition[3])
+                selector = self.__find_filter_selector(condition)
+                if selector and selector[0] not in ['Race', 'Session']:
+                    self.__cache_identifier(selector)
 
         # and the ones we need to output
         for output in self.parsed[0]:
-            if output[0] == 'out':
-                if output[1][0] not in ['Race', 'Session']:
-                    self.__cache_identifier(output[1])
-            elif output[0] in ['count', 'average', 'percent', 'out', 'min', 'max']:
-                self.__cache_identifier(output[1])
-            elif output[0] in ['top', 'bottom']:
-                self.__cache_identifier(output[2])
+            selector = self.__find_output_selector(output)
+            if selector[0] not in ['Race', 'Session']:
+                self.__cache_identifier(selector)
 
         # generate an alias for each table and join on race_id
         self.__gen_aliases()
@@ -179,6 +181,21 @@ class EventQuery(object):
                 if self.__order(self.parsed[0][0]):
                     break
 
+        for item in self.parsed[0]:
+            self.__append_header(item)
+            self.__append_type(item)
+
+
+    def __append_header(self, item):
+        self.column_names.append(' '.join(flatten(item.asList())))
+
+
+    def __append_type(self, item):
+        selector = self.__find_output_selector(item)
+        field = self.lang_to_column[item[-1]]
+        tabname = selector[0] if selector[0] in ['Race', 'Session'] else 'Event'
+        self.column_types.append([tabname, field])
+
 
     def __cache_identifier(self, ident):
         idhash = ''.join(ident.asList())
@@ -212,6 +229,13 @@ class EventQuery(object):
         table = self.alias_cache[''.join(selector)]
         self.query = self.query.order_by(self.__get_field(table, out_field))
         return True
+
+
+    def __find_output_selector(self, out):
+        if out[0] in ['count', 'out', 'min', 'max', 'average']:
+            return out[1]
+        elif out[0] in ['top', 'bottom']:
+            return out[2]
 
 
     def __find_filter_selector(self, cond):

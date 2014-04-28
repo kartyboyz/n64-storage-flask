@@ -292,6 +292,8 @@ class QueryAPI(Resource):
             abort(400, "Query was invalid for some reason")
         ret = {
             'query': query['query'],
+            'headers': eq.column_names,
+            'types': eq.column_types,
             'results': eq.query.all()
         }
         return ret
