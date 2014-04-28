@@ -6,7 +6,7 @@ from boto import sqs
 from boto.sqs.message import Message
 import json
 
-from .models import Session, Race, Event, db
+from .models import Session, Race, Event, db, ARRAY
 from . import app
 from . import video_api
 
@@ -308,7 +308,7 @@ class SearchAPI(Resource):
         query = db.session.query(Race)
         for key, value in request.args.iteritems():
             if key == 'player':
-                query = query.filter(Race.characters.contains([db.cast(value, db.VARCHAR(length=16))]))
+                query = query.filter(Race.characters.contains(db.cast([str(value)], ARRAY(db.VARCHAR))))
             elif key == 'course':
                 query = query.filter(Race.course == value)
 
