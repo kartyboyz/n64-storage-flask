@@ -303,6 +303,18 @@ class QueryInfoAPI(Resource):
         return info.to_dict()
 
 
+class SearchAPI(Resource):
+    def get(self):
+        query = db.session.query(Race)
+        for key, value in request.args.iteritems():
+            if key == 'player':
+                query = query.filter(Race.characters.contains([db.cast(value, db.VARCHAR(length=16))]))
+            elif key == 'course':
+                query = query.filter(Race.course == value)
+
+        return [marshal(r, RaceAPI.fields) for r in query]
+
+
 def configure_resources(api):
     api.add_resource(SessionListAPI, '/sessions')
     api.add_resource(SessionAPI, '/sessions/<int:session_id>')
@@ -315,6 +327,7 @@ def configure_resources(api):
     api.add_resource(UserRaceListApi, '/users/<user>/races')
     api.add_resource(QueryAPI, '/query')
     api.add_resource(QueryInfoAPI, '/query/info')
+    api.add_resource(SearchAPI, '/search')
 
 def connect_sqs(app):
     app.sqs_connection = sqs.connect_to_region('us-east-1')
