@@ -22,7 +22,7 @@ items = ['Banana', 'BananaBunch', 'Boo', 'FakeItemBox', 'GreenShell', 'TripleGre
 
 courses = ['LuigiCircuit', 'MooMooFarm', 'KoopaTroopaBeach', 'KalimariDesert', 'ToadsTurnpike',
            'FrappeSnowland', 'ChocoMountain', 'MarioRaceway', 'WarioStadium', 'SherbertLand',
-           'RoyalRaceway', 'BowsersCastle', 'DKsJungleParkway', 'BansheeBoardwalk', 'RainbowRoad']
+           'RoyalRaceway', 'BowsersCastle', 'DKsJungleParkway', 'YoshiValley', 'BansheeBoardwalk', 'RainbowRoad']
 
 
 event_type_spec = oneOf(event_types, caseless=True)

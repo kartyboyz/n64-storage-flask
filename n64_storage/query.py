@@ -11,9 +11,9 @@ from . import models as m
 from . import parser
 from .parser import query_parser
 
-import logging
-logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+#import logging
+#logging.basicConfig()
+#logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 class TableWrapper(object):
@@ -152,8 +152,11 @@ class EventQuery(object):
         table = self.alias_cache.values()[0]
 
         self.query = m.db.session.query()
-        self.query = self.query.select_from(table)
-        self.query = self.query.join(m.Race, table.race_id==m.Race.id)
+        if isinstance(table, TableWrapper):
+            self.query = self.query.select_from(table.cls)
+        else:
+            self.query = self.query.select_from(table)
+            self.query = self.query.join(m.Race, table.race_id==m.Race.id)
         self.query = self.query.join(m.Session)
         self.query = self.query.distinct()
 
@@ -388,7 +391,7 @@ class EventQuery(object):
 
 
     def __count(self, table, column, field):
-        self.query = self.query.add_columns(self.__get_field(table, field))
+        self.query = self.query.add_columns(f.count(self.__get_field(table, field)))
         self.__default_filter(table, column)
 
 
