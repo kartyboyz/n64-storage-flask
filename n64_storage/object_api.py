@@ -2,15 +2,25 @@
 from flask import request
 from flask.ext.restful import Resource, marshal, fields, abort
 
+from boto.ec2 import autoscale
 from boto import sqs
 from boto.sqs.message import Message
 import json
+
 
 from .models import Session, Race, Event, db, ARRAY
 from . import app
 from . import video_api
 
 from .query import EventQuery, LanguageDescription
+
+def increment_asg(group_name):
+    conn = autoscale.connect_to_region('us-east-1')
+    for group in conn.get_all_groups():
+        if group.name == "video-processing-group":
+            break
+
+    group.set_capacity(min(group.desired_capacity + 1, group.max_size))
 
 
 class SessionAPI(Resource):
@@ -79,6 +89,9 @@ class SessionListAPI(Resource):
             msg = Message()
             msg.set_body(json.dumps(marshal(s, SessionAPI.fields)))
             app.session_queue.write(msg)
+
+        increment_asg('video-processing-group')
+
 
         return {"message": "Success", "id": s.id}
 
@@ -186,7 +199,6 @@ class RaceListAPI(Resource):
             msg = Message()
             msg.set_body(json.dumps(marshal(race, RaceAPI.fields)))
             app.race_queue.write(msg)
-
 
         return {'message': "Success", 'id':race.id}
 
