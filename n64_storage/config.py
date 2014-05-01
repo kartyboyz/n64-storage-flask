@@ -7,6 +7,11 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     RACE_PIPELINE = '1398306135448-eqvam9'
     SESS_PIPELINE = '1395885064713-5fx6l1'
+    PRESET = '1351620000001-100070'
+    AWS_REGION = 'us-east-1'
+    SPLIT_QUEUE = 'split-queue'
+    PROCESS_QUEUE = 'process-queue'
+    AUTOSCALE_GROUP = 'video-processing-group'
     TRANSCODE = False
 
 

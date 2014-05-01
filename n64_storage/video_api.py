@@ -44,7 +44,7 @@ def submit_transcode_job(obj):
     }
     outputs = [{
         'Key': name,
-        'PresetId': '1351620000001-100070'
+        'PresetId': app.config['PRESET']
     }]
     et = elastictranscoder.connect_to_region('us-east-1')
 
@@ -60,6 +60,6 @@ def submit_transcode_job(obj):
             return False
 
     return True
-    
+
 
 

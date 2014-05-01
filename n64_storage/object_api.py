@@ -15,9 +15,9 @@ from . import video_api
 from .query import EventQuery, LanguageDescription
 
 def increment_asg(group_name):
-    conn = autoscale.connect_to_region('us-east-1')
+    conn = autoscale.connect_to_region(app.config['AWS_REGION'])
     for group in conn.get_all_groups():
-        if group.name == "video-processing-group":
+        if group.name == app.config['AUTOSCALE_GROUP']:
             break
 
     group.set_capacity(min(group.desired_capacity + 1, group.max_size))
@@ -358,9 +358,9 @@ def configure_resources(api):
     api.add_resource(SearchAPI, '/search')
 
 def connect_sqs(app):
-    app.sqs_connection = sqs.connect_to_region('us-east-1')
-    app.session_queue = app.sqs_connection.get_queue('split-queue')
+    app.sqs_connection = sqs.connect_to_region(app.config['AWS_REGION'])
+    app.session_queue = app.sqs_connection.get_queue(app.config['SPLIT_QUEUE'])
     app.session_queue.set_timeout(60*15)
-    app.race_queue = app.sqs_connection.get_queue('process-queue')
+    app.race_queue = app.sqs_connection.get_queue(app.config['PROCESS_QUEUE'])
     app.race_queue.set_timeout(60*15)
 
