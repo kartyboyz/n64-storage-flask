@@ -335,6 +335,7 @@ class EventQuery(object):
         event = aliased(m.Event)
         sub = m.db.session.query().select_from(event)\
                 .filter(event.race_id == table.race_id)\
+                .filter(event.player == table.player)\
                 .add_column(f.count(event.id).label('ev_count'))\
                 .correlate(table)
         sub = self.__match_selector(sub, event, selector)
@@ -354,6 +355,8 @@ class EventQuery(object):
         try:
             if selector[0] in parser.event_subtypes:
                 q = q.filter(table.event_subtype == selector[0])
+            elif selector[0] in ['Session', 'Race']:
+                pass
             else:
                 q = q.filter(table.event_type == selector[0])
 
