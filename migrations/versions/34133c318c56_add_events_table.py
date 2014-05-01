@@ -22,7 +22,7 @@ def upgrade():
     sa.Column('player', sa.Integer(), nullable=True),
     sa.Column('timestamp', sa.Numeric(precision=7, scale=1), nullable=True),
     sa.Column('lap', sa.Integer(), nullable=True),
-    sa.Column('event_type', sa.Enum('Lap', 'Item', 'Collision', 'Pass', 'Shortcut', name='event_type'), nullable=True),
+    sa.Column('event_type', sa.Enum('Lap', 'Item', 'Collision', 'Pass', 'Shortcut', 'Tag', 'Fall', 'Reverse', name='event_type'), nullable=True),
     sa.Column('event_subtype', sa.String(), nullable=True),
     sa.Column('event_info', sa.String(), nullable=True),
     sa.Column('linked_event_id', sa.Integer(), nullable=True),
