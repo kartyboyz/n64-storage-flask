@@ -289,26 +289,40 @@ class UserRaceListApi(Resource):
 
 
 class QueryAPI(Resource):
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type'
+    }
     def get(self):
         query = request.get_json()
 
         if query is None:
-            abort(400, message="Require query data")
+            return {"message": "Require query data"}, 400, QueryAPI.headers
 
         if 'query' not in query:
-            abort(400, message="Require query")
+            return {"message": "Require query field in request"}, 400, QueryAPI.headers
 
         try:
             eq = EventQuery(query['query'], query.get('user', None))
         except:
-            abort(400, "Query was invalid for some reason")
+            return {"message": "Query was invalid"}, 400, QueryAPI.headers
         ret = {
             'query': query['query'],
             'headers': eq.column_names,
             'types': eq.column_types,
             'results': eq.query.all()
         }
-        return ret
+        return ret, 200, QueryAPI.headers
+
+
+    def post(self):
+        return self.get()
+
+    def options(self):
+        return {}, 200, QueryAPI.headers
+
+
+
 
 
 class QueryInfoAPI(Resource):

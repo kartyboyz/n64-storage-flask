@@ -420,17 +420,17 @@ class EventQuery(object):
 
 
     def __min(self, table, column, field):
-        self.query = self.query.add_columns(f.min(self.__get_field(table, field)))
+        self.query = self.query.add_columns(f.min(cast(self.__get_field(table, field), m.db.Float)))
         self.__default_filter(table, column)
 
 
     def __max(self, table, column, field):
-        self.query = self.query.add_columns(f.max(self.__get_field(table, field)))
+        self.query = self.query.add_columns(f.max(cast(self.__get_field(table, field), m.db.Float)))
         self.__default_filter(table, column)
 
 
     def __average(self, table, column, field):
-        self.query = self.query.add_columns(f.avg(self.__get_field(table, field)))
+        self.query = self.query.add_columns(f.avg(cast(self.__get_field(table, field), m.db.Float)))
         self.__default_filter(table, column)
 
 
