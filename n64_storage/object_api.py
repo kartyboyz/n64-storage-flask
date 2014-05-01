@@ -322,13 +322,13 @@ class QueryAPI(Resource):
         return {}, 200, QueryAPI.headers
 
 
-
-
-
 class QueryInfoAPI(Resource):
+    def options(self):
+        return {}, 200, QueryAPI.headers
+
     def get(self):
         info = LanguageDescription()
-        return info.to_dict()
+        return info.to_dict(), 200, QueryAPI.headers
 
 
 class SearchAPI(Resource):
