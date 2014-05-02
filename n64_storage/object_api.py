@@ -114,7 +114,7 @@ class RaceAPI(Resource):
         'video_split': fields.Boolean,
     }
     allowed_updates = ['video_url', 'start_time', 'duration', 'characters',
-            'course', 'player_regions', 'processed', 'video_split']
+            'course', 'audio_url', 'player_regions', 'processed', 'video_split']
 
 
     def get(self, race_id):
