@@ -399,6 +399,8 @@ class EventQuery(object):
     def __get_field(self, table, field):
         if field == 'player':
             return m.Race.characters[table.__getattr__(field)]
+        elif field == 'timestamp':
+            return cast(table.__getattr__(field), m.db.Float)
         else:
             return table.__getattr__(field)
 
