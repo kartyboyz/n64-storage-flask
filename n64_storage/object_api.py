@@ -343,6 +343,19 @@ class SearchAPI(Resource):
         return [marshal(r, RaceAPI.fields) for r in query]
 
 
+class TagAPI(Resource):
+    def get(self, race_id, user=None):
+        query = db.session.query(Event).join(Race).join(Session)
+        query = query.filter(Event.event_type == "Tag")
+        query = query.filter(Event.race_id == race_id)
+        if user: query = query.filter(Session.owner == user)
+
+        return [marshal(r, RaceAPI.fields) for r in query]
+
+class AllTagAPI(TagAPI):
+    pass
+
+
 def configure_resources(api):
     api.add_resource(SessionListAPI, '/sessions')
     api.add_resource(SessionAPI, '/sessions/<int:session_id>')
@@ -356,11 +369,13 @@ def configure_resources(api):
     api.add_resource(QueryAPI, '/query')
     api.add_resource(QueryInfoAPI, '/query/info')
     api.add_resource(SearchAPI, '/search')
+    api.add_resource(AllTagAPI, '/alltags/<int:race_id>')
+    api.add_resource(TagAPI, '/tags/<user>/<int:race_id>')
 
 def connect_sqs(app):
     app.sqs_connection = sqs.connect_to_region(app.config['AWS_REGION'])
     app.session_queue = app.sqs_connection.get_queue(app.config['SPLIT_QUEUE'])
     app.session_queue.set_timeout(60*15)
     app.race_queue = app.sqs_connection.get_queue(app.config['PROCESS_QUEUE'])
-    app.race_queue.set_timeout(60*15)
+    app.race_queue.set_timeout(60*45)
 
