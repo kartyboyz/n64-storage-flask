@@ -346,12 +346,12 @@ class SearchAPI(Resource):
 
 class TagAPI(Resource):
     def get(self, race_id, user=None):
-        query = db.session.query(Event).join(Race).join(Session)
+        query = Event.query.join(Race).join(Session)
         query = query.filter(Event.event_type == "Tag")
         query = query.filter(Event.race_id == race_id)
         if user: query = query.filter(Session.owner == user)
 
-        return [marshal(r, RaceAPI.fields) for r in query]
+        return [marshal(r, EventAPI.fields) for r in query]
 
 class AllTagAPI(TagAPI):
     pass
