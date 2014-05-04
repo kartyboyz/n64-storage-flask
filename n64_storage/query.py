@@ -45,7 +45,7 @@ class LanguageDescription(object):
             if len(self.selectors[inf]) == 0:
                 del self.selectors[inf]
 
-        self.selectors['Time'] = []
+        self.selectors['Time'] = ['1', '2', '3']
 
         self.players = parser.players
         self.courses = parser.courses
