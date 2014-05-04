@@ -224,11 +224,11 @@ class EventAPI(Resource):
         event = Race.query.get_or_404(event_id)
         return marshal(event, EventAPI.fields), 200
 
-def delete(self, event_id):
-        event = Race.query.get_or_404(event_id)
-        db.session.delete(event)
-        db.session.commit()
-        return {'message': "Success"}
+    def delete(self, event_id):
+            event = Event.query.get_or_404(event_id)
+            db.session.delete(event)
+            db.session.commit()
+            return {'message': "Success"}
 
 
 class EventListAPI(Resource):
