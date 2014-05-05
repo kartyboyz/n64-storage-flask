@@ -285,7 +285,7 @@ class UserSessionListApi(Resource):
 
 class UserRaceListApi(Resource):
     def get(self, user):
-        races = db.session.query(Race).join(Session).filter(Session.owner == user).order_by(Race.id)
+        races = db.session.query(Race).join(Session).filter(Session.owner == user).order_by(Race.race_number)
         return [marshal(r, RaceAPI.fields) for r in races]
 
 
@@ -349,7 +349,7 @@ class TagAPI(Resource):
         query = Event.query.join(Race).join(Session)
         query = query.filter(Event.event_type == "Tag")
         query = query.filter(Event.race_id == race_id)
-        query = query.order_by(Event.id)
+        query = query.order_by(Event.event_number)
         if user: query = query.filter(Session.owner == user)
 
         return [marshal(r, EventAPI.fields) for r in query]
