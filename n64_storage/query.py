@@ -79,7 +79,7 @@ class LanguageDescription(object):
         q = q.filter((cast(m.Event.event_type, m.db.String) == et)
                 | (m.Event.event_subtype == et))
 
-        return [i[0] for i in q.all() if len(i[0]) > 0]
+        return [i[0] for i in q.all() if i[0] and len(i[0]) > 0]
 
     def to_dict(self):
         d = {
