@@ -379,7 +379,7 @@ def configure_resources(api):
 def connect_sqs(app):
     app.sqs_connection = sqs.connect_to_region(app.config['AWS_REGION'])
     app.session_queue = app.sqs_connection.get_queue(app.config['SPLIT_QUEUE'])
-    app.session_queue.set_timeout(60*15)
+    app.session_queue.set_timeout(60*55)
     app.race_queue = app.sqs_connection.get_queue(app.config['PROCESS_QUEUE'])
-    app.race_queue.set_timeout(60*45)
+    app.race_queue.set_timeout(60*55)
 
