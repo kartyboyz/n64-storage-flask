@@ -7,7 +7,7 @@ from pyparsing import alphanums, nums
 event_types = ['Lap', 'Item', 'Collision', 'Pass', 'Shortcut', 'Tag', 'Fall', 'Reverse']
 event_subtypes = ['Race', 'Session', 'Get', 'Use', 'Steal', 'Stolen', 'Passing',
                 'Passed', 'Start', 'New', 'Time', 'Finish', 'Shortcut', 'Watch',
-                'Tag', 'Banana', 'Spin', 'Crash']
+                'Tag', 'User', 'Egg', 'Banana', 'Spin', 'Crash']
 event_fields = ['id', 'lap', 'info', 'subtype', 'type', 'place', 'player', 'race',
                 'session', 'course', 'time']
 race_fields = ['course', 'characters']

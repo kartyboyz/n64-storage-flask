@@ -160,7 +160,9 @@ class RaceListAPI(Resource):
         if session is None:
             abort(404, message="Session {} doesn't exist".format(session_id))
 
-        l = [marshal(r, RaceAPI.fields) for r in session.races]
+        races = Race.query.filter(Race.session == session).order_by(Race.race_number)
+
+        l = [marshal(r, RaceAPI.fields) for r in races]
         return l
 
 
