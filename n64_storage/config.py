@@ -1,4 +1,5 @@
 
+import os
 
 class Config(object):
     DEBUG = True
@@ -17,8 +18,7 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    #SQLALCHEMY_DATABASE_URI = 'postgresql+pg8000://kartyboyz:kartzarecool@n64-database.cjkhmjv2ca1f.us-east-1.rds.amazonaws.com/n64data'
-    SQLALCHEMY_DATABASE_URI = 'postgresql+pg8000://192.168.98.201/n64_storage'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://user:password@example.com/kartdata'
 
 
 class TestingConfig(Config):
@@ -28,5 +28,5 @@ class TestingConfig(Config):
 class AWSConfig(Config):
     DEBUG = True
     SEND_MESSAGES = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://kartyboyz:kartzarecool@n64-database.cjkhmjv2ca1f.us-east-1.rds.amazonaws.com/n64data'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE', '')
     TRANSCODE = True
